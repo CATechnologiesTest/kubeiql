@@ -1,0 +1,211 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "H0V4mMgMFrJLhJdIT4KHT9di4HI=",
+			"path": "github.com/Sirupsen/logrus",
+			"revision": "b9def5b3c33f812a4f503538d1ee21eeb6787d6d",
+			"revisionTime": "2017-02-07T00:44:51Z"
+		},
+		{
+			"checksumSHA1": "dvabztWVQX8f6oMLRyv4dLH+TGY=",
+			"path": "github.com/davecgh/go-spew/spew",
+			"revision": "346938d642f2ec3594ed81d874461961cd0faa76",
+			"revisionTime": "2016-10-29T20:57:26Z"
+		},
+		{
+			"checksumSHA1": "g/V4qrXjUGG9B+e3hB+4NAYJ5Gs=",
+			"path": "github.com/gorilla/context",
+			"revision": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42",
+			"revisionTime": "2016-08-17T18:46:32Z"
+		},
+		{
+			"checksumSHA1": "zmCk+lgIeiOf0Ng9aFP9aFy8ksE=",
+			"path": "github.com/gorilla/mux",
+			"revision": "599cba5e7b6137d46ddf58fb1765f5d928e69604",
+			"revisionTime": "2017-02-28T22:43:54Z"
+		},
+		{
+			"checksumSHA1": "15NDILTqSGtUYEv1UdZkPVbeCpA=",
+			"path": "github.com/jackc/pgx",
+			"revision": "d49a78dd734e07ab34de47d5be1c3d1bfe77094d",
+			"revisionTime": "2017-08-03T19:17:28Z"
+		},
+		{
+			"checksumSHA1": "rsDmBQ/jGFUN2t6G4c3ohkKGKdQ=",
+			"path": "github.com/jackc/pgx/chunkreader",
+			"revision": "d49a78dd734e07ab34de47d5be1c3d1bfe77094d",
+			"revisionTime": "2017-08-03T19:17:28Z"
+		},
+		{
+			"checksumSHA1": "wArf/u0cmHsLafG2tOcjVUUXQBw=",
+			"path": "github.com/jackc/pgx/internal/sanitize",
+			"revision": "d49a78dd734e07ab34de47d5be1c3d1bfe77094d",
+			"revisionTime": "2017-08-03T19:17:28Z"
+		},
+		{
+			"checksumSHA1": "OCtOmvS8BLHQAyQXJ/Ub8QxKz0s=",
+			"path": "github.com/jackc/pgx/pgio",
+			"revision": "d49a78dd734e07ab34de47d5be1c3d1bfe77094d",
+			"revisionTime": "2017-08-03T19:17:28Z"
+		},
+		{
+			"checksumSHA1": "qu2S8snSUEOLCHAZZO/7dVD5WoA=",
+			"path": "github.com/jackc/pgx/pgproto3",
+			"revision": "d49a78dd734e07ab34de47d5be1c3d1bfe77094d",
+			"revisionTime": "2017-08-03T19:17:28Z"
+		},
+		{
+			"checksumSHA1": "X1mEx0bbPZ+HVj6q5Uf6PXa/urY=",
+			"path": "github.com/jackc/pgx/pgtype",
+			"revision": "d49a78dd734e07ab34de47d5be1c3d1bfe77094d",
+			"revisionTime": "2017-08-03T19:17:28Z"
+		},
+		{
+			"checksumSHA1": "FXB8JdMDLDKjFAifsUvVbv5jY8I=",
+			"path": "github.com/jackc/pgx/stdlib",
+			"revision": "d49a78dd734e07ab34de47d5be1c3d1bfe77094d",
+			"revisionTime": "2017-08-03T19:17:28Z"
+		},
+		{
+			"checksumSHA1": "zcEtH7VUcRFCeEMKmVwtj0/k9sI=",
+			"path": "github.com/lib/pq",
+			"revision": "0477eb88c5ca4009cb281f13c90633375b6a9987",
+			"revisionTime": "2017-02-06T20:06:38Z"
+		},
+		{
+			"checksumSHA1": "KzsJ/GkPEyvxG8eBcKrHRFoPhzU=",
+			"path": "github.com/lib/pq/oid",
+			"revision": "0477eb88c5ca4009cb281f13c90633375b6a9987",
+			"revisionTime": "2017-02-06T20:06:38Z"
+		},
+		{
+			"checksumSHA1": "Xe767JGU0kFzRBki569Z+wWNpyE=",
+			"path": "github.com/neelance/graphql-go",
+			"revision": "52080e1f0951c75dd4addba57db27fc4de1d0019",
+			"revisionTime": "2017-07-10T07:49:50Z"
+		},
+		{
+			"checksumSHA1": "2xo5wWbyp/TuujcXVKIEPVXzrU0=",
+			"path": "github.com/neelance/graphql-go/errors",
+			"revision": "52080e1f0951c75dd4addba57db27fc4de1d0019",
+			"revisionTime": "2017-07-10T07:49:50Z"
+		},
+		{
+			"checksumSHA1": "G5EgrmrBH4Ff0Vh9qbZTmhD/JgI=",
+			"path": "github.com/neelance/graphql-go/internal/common",
+			"revision": "52080e1f0951c75dd4addba57db27fc4de1d0019",
+			"revisionTime": "2017-07-10T07:49:50Z"
+		},
+		{
+			"checksumSHA1": "BCgntIJgm65/5izmReUwwFbhL6k=",
+			"path": "github.com/neelance/graphql-go/internal/exec",
+			"revision": "52080e1f0951c75dd4addba57db27fc4de1d0019",
+			"revisionTime": "2017-07-10T07:49:50Z"
+		},
+		{
+			"checksumSHA1": "2jnkfnl371KrzlvVXTBZpEkVieg=",
+			"path": "github.com/neelance/graphql-go/internal/exec/packer",
+			"revision": "52080e1f0951c75dd4addba57db27fc4de1d0019",
+			"revisionTime": "2017-07-10T07:49:50Z"
+		},
+		{
+			"checksumSHA1": "NzIEa3L5Bac+MgP7NJTgyegsNyA=",
+			"path": "github.com/neelance/graphql-go/internal/exec/resolvable",
+			"revision": "52080e1f0951c75dd4addba57db27fc4de1d0019",
+			"revisionTime": "2017-07-10T07:49:50Z"
+		},
+		{
+			"checksumSHA1": "PpRbkvmCxc+dSizVv65I0xvGlQo=",
+			"path": "github.com/neelance/graphql-go/internal/exec/selected",
+			"revision": "52080e1f0951c75dd4addba57db27fc4de1d0019",
+			"revisionTime": "2017-07-10T07:49:50Z"
+		},
+		{
+			"checksumSHA1": "jfcNYm+kb5DPigLhLvGO5QoXGnM=",
+			"path": "github.com/neelance/graphql-go/internal/lexer",
+			"revision": "5b2978fcb1baf5d104a51d2638e2204abac0f5fd",
+			"revisionTime": "2017-02-06T02:30:34Z"
+		},
+		{
+			"checksumSHA1": "9gS7LUWp7G78ZYvbGtOHlqCp448=",
+			"path": "github.com/neelance/graphql-go/internal/query",
+			"revision": "52080e1f0951c75dd4addba57db27fc4de1d0019",
+			"revisionTime": "2017-07-10T07:49:50Z"
+		},
+		{
+			"checksumSHA1": "UQDy8HWW0f3Ra/BIamumRNEOXNo=",
+			"path": "github.com/neelance/graphql-go/internal/schema",
+			"revision": "52080e1f0951c75dd4addba57db27fc4de1d0019",
+			"revisionTime": "2017-07-10T07:49:50Z"
+		},
+		{
+			"checksumSHA1": "lm4eMItTymOnxqEjocli8DafSSY=",
+			"path": "github.com/neelance/graphql-go/internal/validation",
+			"revision": "52080e1f0951c75dd4addba57db27fc4de1d0019",
+			"revisionTime": "2017-07-10T07:49:50Z"
+		},
+		{
+			"checksumSHA1": "jpGTrWqoBIeW5d+ROIgWWDr9fzM=",
+			"path": "github.com/neelance/graphql-go/introspection",
+			"revision": "52080e1f0951c75dd4addba57db27fc4de1d0019",
+			"revisionTime": "2017-07-10T07:49:50Z"
+		},
+		{
+			"checksumSHA1": "/Z0UFL0llSFn7HkOSzJlr05waz0=",
+			"path": "github.com/neelance/graphql-go/log",
+			"revision": "52080e1f0951c75dd4addba57db27fc4de1d0019",
+			"revisionTime": "2017-07-10T07:49:50Z"
+		},
+		{
+			"checksumSHA1": "BjWt9L3iK6mnS6rxnJ9C1l9cJjA=",
+			"path": "github.com/neelance/graphql-go/relay",
+			"revision": "52080e1f0951c75dd4addba57db27fc4de1d0019",
+			"revisionTime": "2017-07-10T07:49:50Z"
+		},
+		{
+			"checksumSHA1": "rpQOH1goO/+oS+1xFcwvGAsRY7I=",
+			"path": "github.com/neelance/graphql-go/trace",
+			"revision": "52080e1f0951c75dd4addba57db27fc4de1d0019",
+			"revisionTime": "2017-07-10T07:49:50Z"
+		},
+		{
+			"checksumSHA1": "lzPj2yJz4Dy6ev0O0L4PNVzplAw=",
+			"path": "github.com/opentracing/opentracing-go",
+			"revision": "6edb48674bd9467b8e91fda004f2bd7202d60ce4",
+			"revisionTime": "2017-02-06T22:16:52Z"
+		},
+		{
+			"checksumSHA1": "+q64ZAwI2qF5goM1mLjav88NOYQ=",
+			"path": "github.com/opentracing/opentracing-go/ext",
+			"revision": "6edb48674bd9467b8e91fda004f2bd7202d60ce4",
+			"revisionTime": "2017-02-06T22:16:52Z"
+		},
+		{
+			"checksumSHA1": "+rbKrafLHDnrQFgeWawo9tfZhV4=",
+			"path": "github.com/opentracing/opentracing-go/log",
+			"revision": "6edb48674bd9467b8e91fda004f2bd7202d60ce4",
+			"revisionTime": "2017-02-06T22:16:52Z"
+		},
+		{
+			"checksumSHA1": "rJab1YdNhQooDiBWNnt7TLWPyBU=",
+			"path": "github.com/pkg/errors",
+			"revision": "c605e284fe17294bda444b34710735b29d1a9d90",
+			"revisionTime": "2017-05-05T04:36:39Z"
+		},
+		{
+			"checksumSHA1": "Y+HGqEkYM15ir+J93MEaHdyFy0c=",
+			"path": "golang.org/x/net/context",
+			"revision": "236b8f043b920452504e263bc21d354427127473",
+			"revisionTime": "2017-02-06T03:21:01Z"
+		},
+		{
+			"checksumSHA1": "Xhsm+TevJogC8U4sG6FO+czBMps=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "7a6e5648d140666db5d920909e082ca00a87ba2c",
+			"revisionTime": "2017-02-01T04:15:14Z"
+		}
+	],
+	"rootPath": "auth"
+}
