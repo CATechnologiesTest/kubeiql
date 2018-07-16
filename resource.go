@@ -16,6 +16,10 @@ type resourceResolver struct {
 	r   *resource
 }
 
+func mapToResource(rMap map[string]interface{}) *resource {
+	return nil
+}
+
 func (r *resourceResolver) Id() string {
 	return (*r.r).Id()
 }

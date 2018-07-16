@@ -21,6 +21,28 @@ type metadataResolver struct {
 	m   *metadata
 }
 
+func mapToMetadata(jsonObj map[string]interface{}) metadata {
+	var m metadata
+	if ct, ok := jsonObj["CreationTimestamp"].(string); ok {
+		m.CreationTimestamp = &ct
+	} else {
+		m.CreationTimestamp = nil
+	}
+	m.GenerateName = jsonObj["GenerateName"].(string)
+	m.Labels = mapToLabels(mapItem(jsonObj, "labels"))
+	m.Name = jsonObj["Name"].(string)
+	m.Namespace = jsonObj["Namespace"].(string)
+	m.OwnerReferences = mapToOwnerReferences(mapItem(jsonObj, "OwnerReferences"))
+	m.SelfLink = jsonObj["SelfLink"].(string)
+	m.Uid = jsonObj["Uid"].(string)
+
+	return m
+}
+
+func mapToOwnerReferences(orMap map[string]interface{}) *[]resource {
+	return nil
+}
+
 func (r *metadataResolver) CreationTimestamp() *string {
 	return r.m.CreationTimestamp
 }
@@ -31,11 +53,7 @@ func (r *metadataResolver) GenerateName() string {
 
 func (r *metadataResolver) Labels() []*labelResolver {
 	var labelResolvers []*labelResolver
-	labels := r.m.Labels
-	if labels == nil {
-		labels = getMetadataLabels(r.m)
-	}
-	for _, label := range *labels {
+	for _, label := range *r.m.Labels {
 		lab := label
 		labelResolvers = append(labelResolvers, &labelResolver{r.ctx, &lab})
 	}
@@ -52,11 +70,7 @@ func (r *metadataResolver) Namespace() string {
 
 func (r *metadataResolver) OwnerReferences() []*resourceResolver {
 	var ownerResolvers []*resourceResolver
-	owners := r.m.OwnerReferences
-	if owners == nil {
-		owners = getMetadataOwnerReferences(r.m)
-	}
-	for _, owner := range *owners {
+	for _, owner := range *r.m.OwnerReferences {
 		own := owner
 		ownerResolvers = append(ownerResolvers, &resourceResolver{r.ctx, &own})
 	}
@@ -73,12 +87,4 @@ func (r *metadataResolver) SelfLink() string {
 
 func (r *metadataResolver) Uid() string {
 	return r.m.Uid
-}
-
-func getMetadataLabels(m *metadata) *[]label {
-	return nil
-}
-
-func getMetadataOwnerReferences(m *metadata) *[]resource {
-	return nil
 }

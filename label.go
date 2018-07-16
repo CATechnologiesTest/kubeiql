@@ -14,6 +14,10 @@ type labelResolver struct {
 	l   *label
 }
 
+func mapToLabels(lMap map[string]interface{}) *[]label {
+	return nil
+}
+
 func (r *labelResolver) Name() string {
 	return r.l.Name
 }
