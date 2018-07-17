@@ -6,9 +6,9 @@ import (
 
 type deployment struct {
 	Id        string
-	Metadata  *metadata
-	Owner     *resource
-	RootOwner *resource
+	Metadata  metadata
+	Owner     resource
+	RootOwner resource
 }
 
 type deploymentResolver struct {

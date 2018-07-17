@@ -6,9 +6,9 @@ import (
 
 type replicaSet struct {
 	Id        string
-	Metadata  *metadata
-	Owner     *resource
-	RootOwner *resource
+	Metadata  metadata
+	Owner     resource
+	RootOwner resource
 }
 
 type replicaSetResolver struct {

@@ -18,7 +18,7 @@ type metadata struct {
 
 type metadataResolver struct {
 	ctx context.Context
-	m   *metadata
+	m   metadata
 }
 
 func mapToMetadata(jsonObj map[string]interface{}) metadata {
@@ -72,7 +72,7 @@ func (r *metadataResolver) OwnerReferences() []*resourceResolver {
 	var ownerResolvers []*resourceResolver
 	for _, owner := range *r.m.OwnerReferences {
 		own := owner
-		ownerResolvers = append(ownerResolvers, &resourceResolver{r.ctx, &own})
+		ownerResolvers = append(ownerResolvers, &resourceResolver{r.ctx, own})
 	}
 	return ownerResolvers
 }

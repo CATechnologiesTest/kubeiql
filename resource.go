@@ -13,25 +13,34 @@ type resource interface {
 
 type resourceResolver struct {
 	ctx context.Context
-	r   *resource
+	r   resource
 }
 
-func mapToResource(rMap map[string]interface{}) *resource {
+func mapToResource(
+	ctx context.Context,
+	rMap map[string]interface{}) resource {
+	kind := getKind(rMap)
+	if kind == "Deployment" {
+		return &deploymentResolver{
+			ctx,
+			&deployment{getUid(rMap), getMetadata(rMap), nil, nil}}
+	}
+
 	return nil
 }
 
 func (r *resourceResolver) Id() string {
-	return (*r.r).Id()
+	return r.r.Id()
 }
 
 func (r *resourceResolver) Metadata() *metadataResolver {
-	return (*r.r).Metadata()
+	return r.r.Metadata()
 }
 
 func (r *resourceResolver) Owner() *resourceResolver {
-	return (*r.r).Owner()
+	return r.r.Owner()
 }
 
 func (r *resourceResolver) RootOwner() *resourceResolver {
-	return (*r.r).RootOwner()
+	return r.r.RootOwner()
 }
