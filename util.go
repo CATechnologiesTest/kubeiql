@@ -1,14 +1,10 @@
 package main
 
 import (
-	//	"context"
+	"context"
 	"errors"
 	"fmt"
 )
-
-func getOwners(resourceMap map[string]interface{}) (resource, resource) {
-	return nil, nil
-}
 
 func mapItem(obj map[string]interface{}, item string) map[string]interface{} {
 	return obj[item].(map[string]interface{})
@@ -53,4 +49,33 @@ func getUid(resourceMap map[string]interface{}) string {
 
 	panic(errors.New(
 		fmt.Sprintf("Invalid Kubernetes resource: %v", resourceMap)))
+}
+
+func getRawOwner(val map[string]interface{}) map[string]interface{} {
+	if orefs := val["OwnerReferences"]; orefs != nil {
+		oArray := orefs.([]map[string]interface{})
+		if len(oArray) > 0 {
+			if res := getK8sResource(
+				getKind(val),
+				oArray[0]["uid"].(string)); res != nil {
+				return res
+			}
+		}
+	}
+
+	return val
+}
+
+func getOwner(ctx context.Context, val map[string]interface{}) resource {
+	return mapToResource(ctx, getRawOwner(val))
+}
+
+func getRootOwner(ctx context.Context, val map[string]interface{}) resource {
+	result := getRawOwner(val)
+
+	if getUid(result) == getUid(val) {
+		return mapToResource(ctx, result)
+	}
+
+	return getRootOwner(ctx, getRawOwner(result))
 }

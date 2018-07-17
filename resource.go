@@ -20,10 +20,17 @@ func mapToResource(
 	ctx context.Context,
 	rMap map[string]interface{}) resource {
 	kind := getKind(rMap)
+
 	if kind == "Deployment" {
-		return &deploymentResolver{
-			ctx,
-			&deployment{getUid(rMap), getMetadata(rMap), nil, nil}}
+		return &deploymentResolver{ctx, mapToDeployment(ctx, rMap)}
+	}
+
+	if kind == "ReplicaSet" {
+		return &replicaSetResolver{ctx, mapToReplicaSet(ctx, rMap)}
+	}
+
+	if kind == "Pod" {
+		return &podResolver{ctx, mapToPod(ctx, rMap)}
 	}
 
 	return nil

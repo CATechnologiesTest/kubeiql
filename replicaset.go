@@ -13,7 +13,19 @@ type replicaSet struct {
 
 type replicaSetResolver struct {
 	ctx context.Context
-	r   *replicaSet
+	r   replicaSet
+}
+
+func mapToReplicaSet(
+	ctx context.Context,
+	jsonObj map[string]interface{}) replicaSet {
+	owner := getOwner(ctx, jsonObj)
+	rootOwner := getRootOwner(ctx, jsonObj)
+	meta := mapToMetadata(mapItem(jsonObj, "metadata"))
+	return replicaSet{(mapItem(jsonObj, "metadata")["uid"]).(string),
+		meta,
+		owner,
+		rootOwner}
 }
 
 func (r *replicaSetResolver) Id() string {
@@ -25,9 +37,20 @@ func (r *replicaSetResolver) Metadata() *metadataResolver {
 }
 
 func (r *replicaSetResolver) Owner() *resourceResolver {
-	return &resourceResolver{r.ctx, r.r.Owner}
+	owner := r.r.Owner
+	if owner == nil {
+		return &resourceResolver{
+			r.ctx, getOwner(r.ctx, getK8sResource("ReplicaSet", r.r.Id))}
+	}
+
+	return &resourceResolver{r.ctx, owner}
 }
 
 func (r *replicaSetResolver) RootOwner() *resourceResolver {
-	return &resourceResolver{r.ctx, r.r.RootOwner}
+	rootOwner := r.r.RootOwner
+	if rootOwner == nil {
+		return &resourceResolver{
+			r.ctx, getRootOwner(r.ctx, getK8sResource("ReplicaSet", r.r.Id))}
+	}
+	return &resourceResolver{r.ctx, rootOwner}
 }

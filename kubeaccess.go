@@ -4,6 +4,6 @@ import (
 //	"context"
 )
 
-func getK8sResource(id string) map[string]interface{} {
+func getK8sResource(kind, id string) map[string]interface{} {
 	return nil
 }

@@ -157,6 +157,10 @@ func (r *Resolver) AllPods(ctx context.Context) *[]*podResolver {
 func (r *Resolver) PodById(
 	ctx context.Context,
 	args *struct{ ID string }) *podResolver {
+	if pmap := getK8sResource("Pod", args.ID); pmap != nil {
+		return &podResolver{ctx, mapToPod(ctx, pmap)}
+	}
+
 	return nil
 }
 
@@ -168,6 +172,10 @@ func (r *Resolver) AllDeployments(ctx context.Context) *[]*deploymentResolver {
 func (r *Resolver) DeploymentById(
 	ctx context.Context,
 	args *struct{ ID string }) *deploymentResolver {
+	if dmap := getK8sResource("Deployment", args.ID); dmap != nil {
+		return &deploymentResolver{ctx, mapToDeployment(ctx, dmap)}
+	}
+
 	return nil
 }
 
@@ -179,5 +187,9 @@ func (r *Resolver) AllReplicaSets(ctx context.Context) *[]*replicaSetResolver {
 func (r *Resolver) ReplicaSetById(
 	ctx context.Context,
 	args *struct{ ID string }) *replicaSetResolver {
+	if rmap := getK8sResource("ReplicaSet", args.ID); rmap != nil {
+		return &replicaSetResolver{ctx, mapToReplicaSet(ctx, rmap)}
+	}
+
 	return nil
 }

@@ -13,11 +13,12 @@ type pod struct {
 
 type podResolver struct {
 	ctx context.Context
-	p   *pod
+	p   pod
 }
 
-func mapToPod(jsonObj map[string]interface{}) pod {
-	owner, rootOwner := getOwners(jsonObj)
+func mapToPod(ctx context.Context, jsonObj map[string]interface{}) pod {
+	owner := getOwner(ctx, jsonObj)
+	rootOwner := getRootOwner(ctx, jsonObj)
 	meta := mapToMetadata(mapItem(jsonObj, "metadata"))
 	return pod{(mapItem(jsonObj, "metadata")["uid"]).(string),
 		meta,
@@ -37,7 +38,8 @@ func (r *podResolver) Metadata() *metadataResolver {
 func (r *podResolver) Owner() *resourceResolver {
 	owner := r.p.Owner
 	if owner == nil {
-		return &resourceResolver{r.ctx, getPodOwner(r.ctx, r.p.Id)}
+		return &resourceResolver{
+			r.ctx, getOwner(r.ctx, getK8sResource("Pod", r.p.Id))}
 	}
 	return &resourceResolver{r.ctx, owner}
 }
@@ -45,40 +47,13 @@ func (r *podResolver) Owner() *resourceResolver {
 func (r *podResolver) RootOwner() *resourceResolver {
 	rootOwner := r.p.RootOwner
 	if rootOwner == nil {
-		return &resourceResolver{r.ctx, getPodRootOwner(r.ctx, r.p.Id)}
+		return &resourceResolver{
+			r.ctx, getRootOwner(r.ctx, getK8sResource("Pod", r.p.Id))}
 	}
 	return &resourceResolver{r.ctx, rootOwner}
 }
 
 func getPodMetadata(p *pod) metadata {
-	meta := mapToMetadata(mapItem(getK8sResource(p.Id), "Metadata"))
+	meta := mapToMetadata(mapItem(getK8sResource("Pod", p.Id), "Metadata"))
 	return meta
-}
-
-func getPodOwner(ctx context.Context, pid string) resource {
-	if podval := getK8sResource(pid); podval != nil {
-		if orefs := podval["OwnerReferences"]; orefs != nil {
-			orefArray := orefs.([]map[string]interface{})
-			if len(orefArray) > 0 {
-				if res := getK8sResource(
-					orefArray[0]["uid"].(string)); res != nil {
-					return mapToResource(ctx, res)
-				}
-			}
-		} else {
-			return mapToResource(ctx, podval)
-		}
-	}
-
-	return nil
-}
-
-func getPodRootOwner(ctx context.Context, pid string) resource {
-	result := getPodOwner(ctx, pid)
-
-	if result.Id() == pid {
-		return result
-	}
-
-	return getPodRootOwner(ctx, getPodOwner(ctx, result.Id()).Id())
 }
