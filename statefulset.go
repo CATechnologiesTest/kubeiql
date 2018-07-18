@@ -1,3 +1,17 @@
+// Copyright 2018 Yipee.io
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
@@ -6,6 +20,7 @@ import (
 	"strings"
 )
 
+// StatefulSets manage pods that have dependencies
 type statefulSet struct {
 	Metadata  metadata
 	Owner     resource
@@ -18,6 +33,7 @@ type statefulSetResolver struct {
 	s   statefulSet
 }
 
+// Translate unmarshalled json into a deployment object
 func mapToStatefulSet(
 	ctx context.Context,
 	jsonObj map[string]interface{}) statefulSet {
@@ -29,6 +45,7 @@ func mapToStatefulSet(
 	return statefulSet{meta, owner, rootOwner, nil}
 }
 
+// StatefulSets have pods as children
 func getStatefulSetPods(ctx context.Context, s statefulSet) *[]pod {
 	rsName := s.Metadata.Name
 	rsNamePrefix := rsName + "-"
@@ -53,6 +70,7 @@ func getStatefulSetPods(ctx context.Context, s statefulSet) *[]pod {
 	return &results
 }
 
+// Resource method implementations
 func (r *statefulSetResolver) Kind() string {
 	return StatefulSetKind
 }
@@ -75,6 +93,7 @@ func (r *statefulSetResolver) RootOwner() *resourceResolver {
 	return &resourceResolver{r.ctx, r.s.RootOwner}
 }
 
+// Resolve child Pods
 func (r *statefulSetResolver) Pods() []*podResolver {
 	if r.s.Pods == nil {
 		r.s.Pods = getStatefulSetPods(r.ctx, r.s)

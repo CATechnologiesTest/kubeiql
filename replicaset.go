@@ -1,3 +1,17 @@
+// Copyright 2018 Yipee.io
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
@@ -6,6 +20,7 @@ import (
 	"strings"
 )
 
+// ReplicaSets manage replicated pods
 type replicaSet struct {
 	Metadata  metadata
 	Owner     resource
@@ -18,6 +33,7 @@ type replicaSetResolver struct {
 	r   replicaSet
 }
 
+// Translate unmarshalled json into a deployment object
 func mapToReplicaSet(
 	ctx context.Context,
 	jsonObj map[string]interface{}) replicaSet {
@@ -29,6 +45,7 @@ func mapToReplicaSet(
 	return replicaSet{meta, owner, rootOwner, nil}
 }
 
+// ReplicaSets have pods as children
 func getReplicaSetPods(ctx context.Context, r replicaSet) *[]pod {
 	rsName := r.Metadata.Name
 	rsNamePrefix := rsName + "-"
@@ -53,6 +70,7 @@ func getReplicaSetPods(ctx context.Context, r replicaSet) *[]pod {
 	return &results
 }
 
+// Resource method implementations
 func (r *replicaSetResolver) Kind() string {
 	return ReplicaSetKind
 }
@@ -75,6 +93,7 @@ func (r *replicaSetResolver) RootOwner() *resourceResolver {
 	return &resourceResolver{r.ctx, r.r.RootOwner}
 }
 
+// Resolve child Pods
 func (r *replicaSetResolver) Pods() []*podResolver {
 	if r.r.Pods == nil {
 		r.r.Pods = getReplicaSetPods(r.ctx, r.r)

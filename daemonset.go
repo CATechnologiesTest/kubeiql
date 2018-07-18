@@ -1,3 +1,17 @@
+// Copyright 2018 Yipee.io
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
@@ -6,6 +20,7 @@ import (
 	"strings"
 )
 
+// DaemonSets place a pod on each server
 type daemonSet struct {
 	Metadata  metadata
 	Owner     resource
@@ -18,6 +33,7 @@ type daemonSetResolver struct {
 	d   daemonSet
 }
 
+// Translate unmarshalled json into a deployment object
 func mapToDaemonSet(
 	ctx context.Context,
 	jsonObj map[string]interface{}) daemonSet {
@@ -29,6 +45,7 @@ func mapToDaemonSet(
 	return daemonSet{meta, owner, rootOwner, nil}
 }
 
+// DaemonSets have pods as children
 func getDaemonSetPods(ctx context.Context, d daemonSet) *[]pod {
 	dsName := d.Metadata.Name
 	dsNamePrefix := dsName + "-"
@@ -53,6 +70,7 @@ func getDaemonSetPods(ctx context.Context, d daemonSet) *[]pod {
 	return &results
 }
 
+// Resource method implementations
 func (r *daemonSetResolver) Kind() string {
 	return DaemonSetKind
 }
@@ -75,6 +93,7 @@ func (r *daemonSetResolver) RootOwner() *resourceResolver {
 	return &resourceResolver{r.ctx, r.d.RootOwner}
 }
 
+// Resolve child Pods
 func (r *daemonSetResolver) Pods() []*podResolver {
 	if r.d.Pods == nil {
 		r.d.Pods = getDaemonSetPods(r.ctx, r.d)

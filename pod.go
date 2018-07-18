@@ -1,3 +1,17 @@
+// Copyright 2018 Yipee.io
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
@@ -5,6 +19,7 @@ import (
 	//	"fmt"
 )
 
+// The base Kubernetes component
 type pod struct {
 	Metadata  metadata
 	Owner     resource
@@ -16,6 +31,7 @@ type podResolver struct {
 	p   pod
 }
 
+// Translate unmarshalled json into a metadata object
 func mapToPod(ctx context.Context, jsonObj map[string]interface{}) pod {
 	placeholder := &ownerRef{ctx, jsonObj, nil}
 	owner := placeholder
@@ -25,6 +41,7 @@ func mapToPod(ctx context.Context, jsonObj map[string]interface{}) pod {
 	return pod{meta, owner, rootOwner}
 }
 
+// Resource method implementations
 func (r *podResolver) Kind() string {
 	return PodKind
 }

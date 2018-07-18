@@ -1,16 +1,25 @@
+// Copyright 2018 Yipee.io
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package main
 
 import (
 	"context"
 )
 
-// The schema below defines the objects and relationships that can be
-// queried and modified. Each "type" below can be returned from
-// queries so a "resolver" must be implemented. The resolver has a
-// method for each field of the object and the graphql server calls a
-// resolver method as needed based on what is requested by the
-// user. Each type has a struct that holds its scalar values while set
-// or list values are constructed on demand.
+// The schema below defines the objects and relationships for Kubernetes.
+// It is not yet complete.
 
 var Schema = `
     schema {
@@ -167,6 +176,7 @@ const DeploymentKind = "Deployment"
 type Resolver struct {
 }
 
+// Pod lookups
 func (r *Resolver) AllPods(ctx context.Context) *[]*podResolver {
 	pset := getAllK8sObjsOfKind(
 		ctx,
@@ -215,6 +225,7 @@ func (r *Resolver) PodByName(
 	return nil
 }
 
+// Deployment lookups
 func (r *Resolver) AllDeployments(ctx context.Context) *[]*deploymentResolver {
 	dset := getAllK8sObjsOfKind(
 		ctx,
@@ -264,6 +275,7 @@ func (r *Resolver) DeploymentByName(
 	return nil
 }
 
+// ReplicaSet lookups
 func (r *Resolver) AllReplicaSets(ctx context.Context) *[]*replicaSetResolver {
 	rset := getAllK8sObjsOfKind(
 		ctx,
@@ -313,6 +325,7 @@ func (r *Resolver) ReplicaSetByName(
 	return nil
 }
 
+// StatefulSet lookups
 func (r *Resolver) AllStatefulSets(ctx context.Context) *[]*statefulSetResolver {
 	sset := getAllK8sObjsOfKind(
 		ctx,
@@ -362,6 +375,7 @@ func (r *Resolver) StatefulSetByName(
 	return nil
 }
 
+// DaemonSet lookups
 func (r *Resolver) AllDaemonSets(ctx context.Context) *[]*daemonSetResolver {
 	dset := getAllK8sObjsOfKind(
 		ctx,
