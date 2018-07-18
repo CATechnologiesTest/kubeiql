@@ -80,6 +80,8 @@ var Schema = `
       owner: Resource
       # The root owner of the replicaSet
       rootOwner: Resource
+      # The pods controlled by this replicaSet
+      pods: [Pod!]!
     }
 
     # A deployment
@@ -90,7 +92,7 @@ var Schema = `
       owner: Resource
       # The root owner of the deployment
       rootOwner: Resource
-      # The replica sets that are children of this deployment
+      # The replicaSets that are children of this deployment
       replicaSets: [ReplicaSet!]!
     }
 

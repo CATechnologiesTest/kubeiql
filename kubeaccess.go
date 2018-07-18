@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	//	"fmt"
 	"io/ioutil"
 	"log"
 	"os/exec"
@@ -65,13 +65,12 @@ func getAllK8sObjsOfKindInNamespace(
 		log.Fatal(err)
 	}
 	var results []resource
-	fmt.Printf("BYTES: %v\n", string(bytes))
 	arr := (fromJson(bytes).(map[string]interface{}))["items"].([]interface{})
 	for _, res := range arr {
-		fmt.Printf("RES: %#v\n", res)
-		results =
-			append(results, mapToResource(ctx, res.(map[string]interface{})))
-		fmt.Printf("RESULTS: %#v\n", results[0])
+		if test(res.(map[string]interface{})) {
+			results =
+				append(results, mapToResource(ctx, res.(map[string]interface{})))
+		}
 	}
 	if results == nil {
 		results = make([]resource, 0)

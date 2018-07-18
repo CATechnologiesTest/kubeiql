@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	//	"fmt"
 	"strings"
 )
 
@@ -47,7 +47,6 @@ func getReplicaSets(ctx context.Context, d deployment) *[]replicaSet {
 		results[idx] = rsr.r
 	}
 
-	fmt.Printf("RSETS: %#v\n", results)
 	return &results
 }
 
