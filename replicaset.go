@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
+	//	"fmt"
 )
 
 type replicaSet struct {
-	Id        string
 	Metadata  metadata
 	Owner     resource
 	RootOwner resource
@@ -21,15 +21,13 @@ func mapToReplicaSet(
 	jsonObj map[string]interface{}) replicaSet {
 	owner := getOwner(ctx, jsonObj)
 	rootOwner := getRootOwner(ctx, jsonObj)
-	meta := mapToMetadata(mapItem(jsonObj, "metadata"))
-	return replicaSet{(mapItem(jsonObj, "metadata")["uid"]).(string),
-		meta,
-		owner,
-		rootOwner}
+	meta :=
+		mapToMetadata(ctx, getNamespace(jsonObj), mapItem(jsonObj, "metadata"))
+	return replicaSet{meta, owner, rootOwner}
 }
 
-func (r *replicaSetResolver) Id() string {
-	return r.r.Id
+func (r *replicaSetResolver) Kind() string {
+	return ReplicaSetKind
 }
 
 func (r *replicaSetResolver) Metadata() *metadataResolver {
@@ -37,20 +35,9 @@ func (r *replicaSetResolver) Metadata() *metadataResolver {
 }
 
 func (r *replicaSetResolver) Owner() *resourceResolver {
-	owner := r.r.Owner
-	if owner == nil {
-		return &resourceResolver{
-			r.ctx, getOwner(r.ctx, getK8sResource("ReplicaSet", r.r.Id))}
-	}
-
-	return &resourceResolver{r.ctx, owner}
+	return &resourceResolver{r.ctx, r.r.Owner}
 }
 
 func (r *replicaSetResolver) RootOwner() *resourceResolver {
-	rootOwner := r.r.RootOwner
-	if rootOwner == nil {
-		return &resourceResolver{
-			r.ctx, getRootOwner(r.ctx, getK8sResource("ReplicaSet", r.r.Id))}
-	}
-	return &resourceResolver{r.ctx, rootOwner}
+	return &resourceResolver{r.ctx, r.r.RootOwner}
 }

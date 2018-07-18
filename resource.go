@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
+	//	"fmt"
 )
 
 type resource interface {
-	Id() string
+	Kind() string
 	Metadata() *metadataResolver
 	Owner() *resourceResolver
 	RootOwner() *resourceResolver
@@ -21,23 +22,38 @@ func mapToResource(
 	rMap map[string]interface{}) resource {
 	kind := getKind(rMap)
 
-	if kind == "Deployment" {
+	if kind == DeploymentKind {
 		return &deploymentResolver{ctx, mapToDeployment(ctx, rMap)}
 	}
 
-	if kind == "ReplicaSet" {
+	if kind == ReplicaSetKind {
 		return &replicaSetResolver{ctx, mapToReplicaSet(ctx, rMap)}
 	}
 
-	if kind == "Pod" {
+	if kind == PodKind {
 		return &podResolver{ctx, mapToPod(ctx, rMap)}
 	}
 
 	return nil
 }
 
-func (r *resourceResolver) Id() string {
-	return r.r.Id()
+func (r *resourceResolver) ToPod() (*podResolver, bool) {
+	c, ok := r.r.(*podResolver)
+	return c, ok
+}
+
+func (r *resourceResolver) ToReplicaSet() (*replicaSetResolver, bool) {
+	c, ok := r.r.(*replicaSetResolver)
+	return c, ok
+}
+
+func (r *resourceResolver) ToDeployment() (*deploymentResolver, bool) {
+	c, ok := r.r.(*deploymentResolver)
+	return c, ok
+}
+
+func (r *resourceResolver) Kind() string {
+	return r.r.Kind()
 }
 
 func (r *resourceResolver) Metadata() *metadataResolver {

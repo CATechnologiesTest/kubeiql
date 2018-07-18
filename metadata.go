@@ -6,7 +6,7 @@ import (
 
 type metadata struct {
 	CreationTimestamp *string
-	GenerateName      string
+	GenerateName      *string
 	Labels            *[]label
 	Name              string
 	Namespace         string
@@ -21,33 +21,48 @@ type metadataResolver struct {
 	m   metadata
 }
 
-func mapToMetadata(jsonObj map[string]interface{}) metadata {
+func mapToMetadata(
+	ctx context.Context, ns string, jsonObj map[string]interface{}) metadata {
 	var m metadata
-	if ct, ok := jsonObj["CreationTimestamp"].(string); ok {
+	var orefs []resource
+	if ct, ok := jsonObj["creationTimestamp"].(string); ok {
 		m.CreationTimestamp = &ct
 	} else {
 		m.CreationTimestamp = nil
 	}
-	m.GenerateName = jsonObj["GenerateName"].(string)
+	if gn, ok := jsonObj["generateName"].(string); ok {
+		m.CreationTimestamp = &gn
+	} else {
+		m.CreationTimestamp = nil
+	}
 	m.Labels = mapToLabels(mapItem(jsonObj, "labels"))
-	m.Name = jsonObj["Name"].(string)
-	m.Namespace = jsonObj["Namespace"].(string)
-	m.OwnerReferences = mapToOwnerReferences(mapItem(jsonObj, "OwnerReferences"))
-	m.SelfLink = jsonObj["SelfLink"].(string)
-	m.Uid = jsonObj["Uid"].(string)
+	m.Name = jsonObj["name"].(string)
+	m.Namespace = jsonObj["namespace"].(string)
+	m.ResourceVersion = jsonObj["resourceVersion"].(string)
+	m.SelfLink = jsonObj["selfLink"].(string)
+	m.Uid = jsonObj["uid"].(string)
 
+	if orArray := jsonObj["ownerReferences"]; orArray != nil {
+		for _, oref := range orArray.([]interface{}) {
+			ormap := oref.(map[string]interface{})
+			orefs = append(
+				orefs,
+				mapToResource(ctx, getK8sResource(
+					ormap["kind"].(string),
+					ns,
+					ormap["name"].(string))))
+		}
+	}
+
+	m.OwnerReferences = &orefs
 	return m
-}
-
-func mapToOwnerReferences(orMap map[string]interface{}) *[]resource {
-	return nil
 }
 
 func (r *metadataResolver) CreationTimestamp() *string {
 	return r.m.CreationTimestamp
 }
 
-func (r *metadataResolver) GenerateName() string {
+func (r *metadataResolver) GenerateName() *string {
 	return r.m.GenerateName
 }
 

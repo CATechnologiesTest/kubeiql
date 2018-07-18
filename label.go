@@ -15,7 +15,13 @@ type labelResolver struct {
 }
 
 func mapToLabels(lMap map[string]interface{}) *[]label {
-	return nil
+	var labels []label
+
+	for k, v := range lMap {
+		labels = append(labels, label{k, v.(string)})
+	}
+
+	return &labels
 }
 
 func (r *labelResolver) Name() string {

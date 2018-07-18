@@ -2,13 +2,15 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"strings"
 )
 
 type deployment struct {
-	Id        string
-	Metadata  metadata
-	Owner     resource
-	RootOwner resource
+	Metadata    metadata
+	Owner       resource
+	RootOwner   resource
+	ReplicaSets *[]replicaSet
 }
 
 type deploymentResolver struct {
@@ -19,17 +21,38 @@ type deploymentResolver struct {
 func mapToDeployment(
 	ctx context.Context,
 	jsonObj map[string]interface{}) deployment {
-	owner := getOwner(ctx, jsonObj)
-	rootOwner := getRootOwner(ctx, jsonObj)
-	meta := mapToMetadata(mapItem(jsonObj, "metadata"))
-	return deployment{(mapItem(jsonObj, "metadata")["uid"]).(string),
-		meta,
-		owner,
-		rootOwner}
+	meta :=
+		mapToMetadata(ctx, getNamespace(jsonObj), mapItem(jsonObj, "metadata"))
+	return deployment{meta, nil, nil, nil}
 }
 
-func (r *deploymentResolver) Id() string {
-	return r.d.Id
+func getReplicaSets(ctx context.Context, d deployment) *[]replicaSet {
+	depName := d.Metadata.Name
+	depNamePrefix := depName + "-"
+	depNamespace := d.Metadata.Namespace
+
+	rsets := getAllK8sObjsOfKindInNamespace(
+		ctx,
+		"ReplicaSet",
+		depNamespace,
+		func(jobj map[string]interface{}) bool {
+			return (strings.HasPrefix(getName(jobj), depNamePrefix) &&
+				hasMatchingOwner(jobj, depName, DeploymentKind))
+		})
+
+	results := make([]replicaSet, len(rsets))
+
+	for idx, rs := range rsets {
+		rsr := rs.(*replicaSetResolver)
+		results[idx] = rsr.r
+	}
+
+	fmt.Printf("RSETS: %#v\n", results)
+	return &results
+}
+
+func (r *deploymentResolver) Kind() string {
+	return DeploymentKind
 }
 
 func (r *deploymentResolver) Metadata() *metadataResolver {
@@ -37,20 +60,21 @@ func (r *deploymentResolver) Metadata() *metadataResolver {
 }
 
 func (r *deploymentResolver) Owner() *resourceResolver {
-	owner := r.d.Owner
-	if owner == nil {
-		return &resourceResolver{
-			r.ctx, getOwner(r.ctx, getK8sResource("Deployment", r.d.Id))}
-	}
-
-	return &resourceResolver{r.ctx, owner}
+	return &resourceResolver{r.ctx, r.d.Owner}
 }
 
 func (r *deploymentResolver) RootOwner() *resourceResolver {
-	rootOwner := r.d.RootOwner
-	if rootOwner == nil {
-		return &resourceResolver{
-			r.ctx, getRootOwner(r.ctx, getK8sResource("Deployment", r.d.Id))}
+	return &resourceResolver{r.ctx, r.d.RootOwner}
+}
+
+func (r *deploymentResolver) ReplicaSets() []*replicaSetResolver {
+	if r.d.ReplicaSets == nil {
+		r.d.ReplicaSets = getReplicaSets(r.ctx, r.d)
 	}
-	return &resourceResolver{r.ctx, rootOwner}
+
+	var res []*replicaSetResolver
+	for _, rs := range *r.d.ReplicaSets {
+		res = append(res, &replicaSetResolver{r.ctx, rs})
+	}
+	return res
 }

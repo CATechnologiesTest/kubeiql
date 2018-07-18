@@ -28,10 +28,7 @@ import (
 // method for each field of the object and the graphql server calls a
 // resolver method as needed based on what is requested by the
 // user. Each type has a struct that holds its scalar values while set
-// or list values are constructed on demand. Each "input" below
-// represents an argument to a query rather than a returnable
-// Ids are represented by the String type (which is convertible
-// to/from string). This is the type the graphql server expects.
+// or list values are constructed on demand.
 
 var Schema = `
     schema {
@@ -42,13 +39,13 @@ var Schema = `
     type Query {
       # look up pods
       allPods(): [Pod]
-      podById(id: String!): Pod
+      podByName(namespace: String!, name: String!): Pod
       # look up deployments
       allDeployments(): [Deployment]
-      deploymentById(id: String!): Deployment
+      deploymentByName(namespace: String!, name: String!): Deployment
       # look up replica sets
       allReplicaSets(): [ReplicaSet]
-      replicaSetById(id: String!): ReplicaSet
+      replicaSetByName(namespace: String!, name: String!): ReplicaSet
     }
 
     # The mutation type, represents all updates we can make to our data
@@ -66,9 +63,7 @@ var Schema = `
     }
 
     # A pod
-    type Pod {
-      # The ID of the pod
-      id: String!
+    type Pod implements Resource {
       # The metadata for the pod (name, labels, namespace, etc.)
       metadata: Metadata!
       # The direct owner of the pod
@@ -78,9 +73,7 @@ var Schema = `
     }
 
     # A replicaSet
-    type ReplicaSet {
-      # The ID of the replicaSet
-      id: String!
+    type ReplicaSet implements Resource {
       # The metadata for the replicaSet (name, labels, namespace, etc.)
       metadata: Metadata!
       # The direct owner of the replicaSet
@@ -90,15 +83,15 @@ var Schema = `
     }
 
     # A deployment
-    type Deployment {
-      # The ID of the deployment
-      id: String!
+    type Deployment implements Resource {
       # The metadata for the deployment (name, labels, namespace, etc.)
       metadata: Metadata!
       # The direct owner of the deployment
       owner: Resource
       # The root owner of the deployment
       rootOwner: Resource
+      # The replica sets that are children of this deployment
+      replicaSets: [ReplicaSet!]!
     }
 
     # metadata
@@ -106,7 +99,7 @@ var Schema = `
       # When was the decorated object created
       creationTimestamp: String
       # Prefix for generated names
-      generateName: String!
+      generateName: String
       # Top level labels
       labels: [Label!]!
       # Generated name
@@ -133,8 +126,8 @@ var Schema = `
 
     # Any Kubernetes resource
     interface Resource {
-      # resource id
-      id: String!
+      # type of resource
+      kind: String!
       # resource metadata
       metadata: Metadata!
       # resource direct owner
@@ -143,6 +136,10 @@ var Schema = `
       rootOwner: Resource
     }
 `
+
+const PodKind = "Pod"
+const ReplicaSetKind = "ReplicaSet"
+const DeploymentKind = "Deployment"
 
 // The root of all queries and mutations. All defined queries and mutations
 // start as methods on Resolver
@@ -154,10 +151,13 @@ func (r *Resolver) AllPods(ctx context.Context) *[]*podResolver {
 	return &podResolvers
 }
 
-func (r *Resolver) PodById(
+func (r *Resolver) PodByName(
 	ctx context.Context,
-	args *struct{ ID string }) *podResolver {
-	if pmap := getK8sResource("Pod", args.ID); pmap != nil {
+	args *struct {
+		Namespace string
+		Name      string
+	}) *podResolver {
+	if pmap := getK8sResource(PodKind, args.Namespace, args.Name); pmap != nil {
 		return &podResolver{ctx, mapToPod(ctx, pmap)}
 	}
 
@@ -169,10 +169,14 @@ func (r *Resolver) AllDeployments(ctx context.Context) *[]*deploymentResolver {
 	return &deploymentResolvers
 }
 
-func (r *Resolver) DeploymentById(
+func (r *Resolver) DeploymentByName(
 	ctx context.Context,
-	args *struct{ ID string }) *deploymentResolver {
-	if dmap := getK8sResource("Deployment", args.ID); dmap != nil {
+	args *struct {
+		Namespace string
+		Name      string
+	}) *deploymentResolver {
+	if dmap := getK8sResource(
+		DeploymentKind, args.Namespace, args.Name); dmap != nil {
 		return &deploymentResolver{ctx, mapToDeployment(ctx, dmap)}
 	}
 
@@ -184,10 +188,14 @@ func (r *Resolver) AllReplicaSets(ctx context.Context) *[]*replicaSetResolver {
 	return &replicaSetResolvers
 }
 
-func (r *Resolver) ReplicaSetById(
+func (r *Resolver) ReplicaSetByName(
 	ctx context.Context,
-	args *struct{ ID string }) *replicaSetResolver {
-	if rmap := getK8sResource("ReplicaSet", args.ID); rmap != nil {
+	args *struct {
+		Namespace string
+		Name      string
+	}) *replicaSetResolver {
+	if rmap := getK8sResource(
+		ReplicaSetKind, args.Namespace, args.Name); rmap != nil {
 		return &replicaSetResolver{ctx, mapToReplicaSet(ctx, rmap)}
 	}
 
