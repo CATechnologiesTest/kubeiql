@@ -59,11 +59,11 @@ func (r *deploymentResolver) Metadata() *metadataResolver {
 }
 
 func (r *deploymentResolver) Owner() *resourceResolver {
-	return &resourceResolver{r.ctx, r.d.Owner}
+	return &resourceResolver{r.ctx, &deploymentResolver{r.ctx, r.d}}
 }
 
 func (r *deploymentResolver) RootOwner() *resourceResolver {
-	return &resourceResolver{r.ctx, r.d.RootOwner}
+	return &resourceResolver{r.ctx, &deploymentResolver{r.ctx, r.d}}
 }
 
 func (r *deploymentResolver) ReplicaSets() []*replicaSetResolver {
@@ -74,6 +74,9 @@ func (r *deploymentResolver) ReplicaSets() []*replicaSetResolver {
 	var res []*replicaSetResolver
 	for _, rs := range *r.d.ReplicaSets {
 		res = append(res, &replicaSetResolver{r.ctx, rs})
+	}
+	if res == nil {
+		res = make([]*replicaSetResolver, 0)
 	}
 	return res
 }

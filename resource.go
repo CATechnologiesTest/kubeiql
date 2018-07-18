@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	//	"fmt"
+	"fmt"
 )
 
 type resource interface {
@@ -22,18 +22,20 @@ func mapToResource(
 	rMap map[string]interface{}) resource {
 	kind := getKind(rMap)
 
-	if kind == DeploymentKind {
+	switch kind {
+	case DeploymentKind:
 		return &deploymentResolver{ctx, mapToDeployment(ctx, rMap)}
-	}
-
-	if kind == ReplicaSetKind {
+	case ReplicaSetKind:
 		return &replicaSetResolver{ctx, mapToReplicaSet(ctx, rMap)}
-	}
-
-	if kind == PodKind {
+	case DaemonSetKind:
+		return &daemonSetResolver{ctx, mapToDaemonSet(ctx, rMap)}
+	case StatefulSetKind:
+		return &statefulSetResolver{ctx, mapToStatefulSet(ctx, rMap)}
+	case PodKind:
 		return &podResolver{ctx, mapToPod(ctx, rMap)}
 	}
 
+	fmt.Printf("BAD KIND: %v\n", kind)
 	return nil
 }
 
@@ -44,6 +46,16 @@ func (r *resourceResolver) ToPod() (*podResolver, bool) {
 
 func (r *resourceResolver) ToReplicaSet() (*replicaSetResolver, bool) {
 	c, ok := r.r.(*replicaSetResolver)
+	return c, ok
+}
+
+func (r *resourceResolver) ToDaemonSet() (*daemonSetResolver, bool) {
+	c, ok := r.r.(*daemonSetResolver)
+	return c, ok
+}
+
+func (r *resourceResolver) ToStatefulSet() (*statefulSetResolver, bool) {
+	c, ok := r.r.(*statefulSetResolver)
 	return c, ok
 }
 

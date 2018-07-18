@@ -21,30 +21,31 @@ type replicaSetResolver struct {
 func mapToReplicaSet(
 	ctx context.Context,
 	jsonObj map[string]interface{}) replicaSet {
-	owner := getOwner(ctx, jsonObj)
-	rootOwner := getRootOwner(ctx, jsonObj)
+	placeholder := &ownerRef{ctx, jsonObj, nil}
+	owner := placeholder
+	rootOwner := placeholder
 	meta :=
 		mapToMetadata(ctx, getNamespace(jsonObj), mapItem(jsonObj, "metadata"))
 	return replicaSet{meta, owner, rootOwner, nil}
 }
 
-func getPods(ctx context.Context, r replicaSet) *[]pod {
+func getReplicaSetPods(ctx context.Context, r replicaSet) *[]pod {
 	rsName := r.Metadata.Name
 	rsNamePrefix := rsName + "-"
 	rsNamespace := r.Metadata.Namespace
 
-	psets := getAllK8sObjsOfKindInNamespace(
+	pset := getAllK8sObjsOfKindInNamespace(
 		ctx,
-		"Pod",
+		PodKind,
 		rsNamespace,
 		func(jobj map[string]interface{}) bool {
 			return (strings.HasPrefix(getName(jobj), rsNamePrefix) &&
 				hasMatchingOwner(jobj, rsName, ReplicaSetKind))
 		})
 
-	results := make([]pod, len(psets))
+	results := make([]pod, len(pset))
 
-	for idx, p := range psets {
+	for idx, p := range pset {
 		pr := p.(*podResolver)
 		results[idx] = pr.p
 	}
@@ -61,21 +62,30 @@ func (r *replicaSetResolver) Metadata() *metadataResolver {
 }
 
 func (r *replicaSetResolver) Owner() *resourceResolver {
+	if oref, ok := r.r.Owner.(*ownerRef); ok {
+		r.r.Owner = getOwner(oref.ctx, oref.ref)
+	}
 	return &resourceResolver{r.ctx, r.r.Owner}
 }
 
 func (r *replicaSetResolver) RootOwner() *resourceResolver {
+	if oref, ok := r.r.Owner.(*ownerRef); ok {
+		r.r.Owner = getOwner(oref.ctx, oref.ref)
+	}
 	return &resourceResolver{r.ctx, r.r.RootOwner}
 }
 
 func (r *replicaSetResolver) Pods() []*podResolver {
 	if r.r.Pods == nil {
-		r.r.Pods = getPods(r.ctx, r.r)
+		r.r.Pods = getReplicaSetPods(r.ctx, r.r)
 	}
 
 	var res []*podResolver
 	for _, p := range *r.r.Pods {
 		res = append(res, &podResolver{r.ctx, p})
+	}
+	if res == nil {
+		res = make([]*podResolver, 0)
 	}
 	return res
 }

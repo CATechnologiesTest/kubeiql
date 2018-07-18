@@ -44,6 +44,40 @@ func lookUpResource(kind, namespace, name string) []byte {
 	return bytes
 }
 
+func getAllK8sObjsOfKind(
+	ctx context.Context,
+	kind string,
+	test func(map[string]interface{}) bool) []resource {
+	cmd := exec.Command("/usr/local/bin/kubectl", "get",
+		"-o", "json", "--all-namespaces", kind)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := cmd.Start(); err != nil {
+		log.Fatal(err)
+	}
+	bytes, err := ioutil.ReadAll(stdout)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := cmd.Wait(); err != nil {
+		log.Fatal(err)
+	}
+	var results []resource
+	arr := (fromJson(bytes).(map[string]interface{}))["items"].([]interface{})
+	for _, res := range arr {
+		if test(res.(map[string]interface{})) {
+			results =
+				append(results, mapToResource(ctx, res.(map[string]interface{})))
+		}
+	}
+	if results == nil {
+		results = make([]resource, 0)
+	}
+	return results
+}
+
 func getAllK8sObjsOfKindInNamespace(
 	ctx context.Context,
 	kind, ns string,
