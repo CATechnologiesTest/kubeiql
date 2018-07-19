@@ -25,7 +25,7 @@ Service.
 To experiment with the API:
 
 1. Download the code
-2. Type <code>sh gobuild.sh
+2. Type <code>sh gobuild.sh</code>
 3. If your kubectl is located somewhere other than /usr/local/bin, set
 the environment variable: KUBECTL_PATH to the location of your
 executable (e.g. KUBECTL_PATH=/usr/share/local/bin/kubectl)
