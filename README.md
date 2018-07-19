@@ -1,4 +1,4 @@
-# Kubeicql
+# Kubeiql
 A GraphQL interface for Kubernetes.
 
 The goal of this project is to provide an alternative GraphQL
@@ -29,7 +29,7 @@ To experiment with the API:
 3. If your kubectl is located somewhere other than /usr/local/bin, set
 the environment variable: KUBECTL_PATH to the location of your
 executable (e.g. KUBECTL_PATH=/usr/share/local/bin/kubectl)
-4. Run ./kubeicql
+4. Run ./kubeiql
 
 The server runs at port 8128. You can use curl to play with it as
 shown in the examples below via the /query endpoint, or point your
