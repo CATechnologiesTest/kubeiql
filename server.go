@@ -22,11 +22,11 @@ import (
 	"github.com/neelance/graphql-go/relay"
 	"log"
 	"net/http"
+	"os"
 )
 
+var KubectlPath string
 var schema *graphql.Schema
-
-type UserData string
 
 func init() {
 	var err error
@@ -34,6 +34,11 @@ func init() {
 	fmt.Println(schema)
 	if err != nil {
 		panic(err)
+	}
+	if path := os.Getenv("KUBECTL_PATH"); path != "" {
+		KubectlPath = path
+	} else {
+		KubectlPath = "/usr/local/bin/kubectl"
 	}
 }
 

@@ -53,7 +53,7 @@ func lookUpMap(
 	cachedVal := (*cache)[key]
 	var result map[string]interface{}
 	if cachedVal == nil {
-		cmd := exec.Command("/usr/local/bin/kubectl", "get",
+		cmd := exec.Command(KubectlPath, "get",
 			"-o", "json", "--namespace", namespace, kind, name)
 		stdout, err := cmd.StdoutPipe()
 		if err != nil {
@@ -95,7 +95,7 @@ func getAllK8sObjsOfKind(
 	cache := ctx.Value("queryCache").(*map[string]interface{})
 	results := (*cache)[kind]
 	if results == nil {
-		cmd := exec.Command("/usr/local/bin/kubectl", "get",
+		cmd := exec.Command(KubectlPath, "get",
 			"-o", "json", "--all-namespaces", kind)
 		stdout, err := cmd.StdoutPipe()
 		if err != nil {
@@ -141,7 +141,7 @@ func getAllK8sObjsOfKindInNamespace(
 	cache := ctx.Value("queryCache").(*map[string]interface{})
 	results := (*cache)[kind]
 	if results == nil {
-		cmd := exec.Command("/usr/local/bin/kubectl", "get",
+		cmd := exec.Command(KubectlPath, "get",
 			"-o", "json", "--namespace", ns, kind)
 		stdout, err := cmd.StdoutPipe()
 		if err != nil {
