@@ -1,4 +1,4 @@
-# kubeicql
+# Kubeicql
 A GraphQL interface for Kubernetes.
 
 The goal of this project is to provide an alternative GraphQL
@@ -6,7 +6,7 @@ interface to a Kubernetes cluster. It is not intended to entirely replace the
 ReST APIs as some of them (particularly the watch APIs) don't map well
 onto GraphQL.
 
-## Current Status:
+## Current Status
 
 pre-alpha
 
@@ -17,13 +17,26 @@ ReplicaSets, StatefulSets, and DaemonSets.
 kubectl to enable the development of the graph traversal code. The
 plan is to use API Aggregation to put the cluster lookups into the API
 Service.
+* Tests are lacking
+* Not yet built into a container (which we will need to deploy within
+  the cluster's API service)
 
+## Getting Started
+To experiment with the API:
 
-## Getting started
+1. Download the code
+2. Type <code>sh gobuild.sh
+3. If your kubectl is located somewhere other than /usr/local/bin, set
+the environment variable: KUBECTL_PATH to the location of your
+executable (e.g. KUBECTL_PATH=/usr/share/local/bin/kubectl)
+4. Run ./kubeicql
 
+The server runs at port 8128. You can use curl to play with it as
+shown in the examples below via the /query endpoint, or point your
+browser at 'localhost:8128/' and experiment with the GraphiQL tool
+(much more user-friendly).
 
-
-## Examples:
+## Examples
 
 The query:
 
