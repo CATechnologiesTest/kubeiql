@@ -20,11 +20,22 @@ Service.
 
 Examples:
 
+The query:
+
+``` json
+{
+  daemonSetByName(namespace: "kube-system", name: "kube-proxy") {
+    metadata {name namespace labels {name value}}
+  }
+}
+```
+
 <code>
 curl -X POST -H"Content-Type: application/json"
 http://localhost:8128/query -d
 '{ "query": "{daemonSetByName(namespace: \"kube-system\", name: \"kube-proxy\") {    metadata {name namespace labels {name value}} pods {metadata {name}}}}"}'
 </code>
+
 
 returns:
 
@@ -55,6 +66,26 @@ returns:
 
 ```
 
+and the query:
+
+``` json
+{
+  allPods() {
+    owner {kind metadata {name}}
+    rootOwner { kind metadata { name namespace }
+      ... on StatefulSet {
+        metadata { name }
+      }
+      ... on Deployment {
+        replicaSets {
+            metadata { name }
+          pods { metadata { name } } }
+      }
+    }
+  }
+}
+```
+
 <code>
 curl -X POST -H"Content-Type: application/json"
 http://localhost:8128/query -d '{"query": "{allPods() {owner {kind
@@ -62,6 +93,7 @@ metadata {name}} rootOwner { kind metadata { name namespace } ... on
 StatefulSet { metadata { name } } ... on Deployment { replicaSets {
 metadata { name } pods { metadata { name } } } } } } }" }'
 </code>
+
 
 returns:
 
@@ -3474,5 +3506,3 @@ returns:
 }
 
 ```
-
-
