@@ -26,9 +26,13 @@ import (
 // Functions for retrieving Kubernetes information from a cluster
 
 // Get a single resource instance from a namespace
-func getK8sResource(kind, namespace, name string) map[string]interface{} {
-	return fromJson(
-		lookUpResource(kind, namespace, name)).(map[string]interface{})
+func getK8sResource(ctx context.Context, kind, namespace, name string) resource {
+	return lookUpResource(ctx, kind, namespace, name)
+}
+
+func getRawK8sResource(
+	ctx context.Context, kind, namespace, name string) map[string]interface{} {
+	return lookUpMap(ctx, kind, namespace, name)
 }
 
 func fromJson(val []byte) interface{} {
@@ -41,24 +45,46 @@ func fromJson(val []byte) interface{} {
 	return result
 }
 
-func lookUpResource(kind, namespace, name string) []byte {
-	cmd := exec.Command("/usr/local/bin/kubectl", "get",
-		"-o", "json", "--namespace", namespace, kind, name)
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatal(err)
+func lookUpMap(
+	ctx context.Context,
+	kind, namespace, name string) map[string]interface{} {
+	cache := ctx.Value("queryCache").(*map[string]interface{})
+	key := cacheKey(kind, namespace, name)
+	cachedVal := (*cache)[key]
+	var result map[string]interface{}
+	if cachedVal == nil {
+		cmd := exec.Command("/usr/local/bin/kubectl", "get",
+			"-o", "json", "--namespace", namespace, kind, name)
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := cmd.Start(); err != nil {
+			log.Fatal(err)
+		}
+		bytes, err := ioutil.ReadAll(stdout)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := cmd.Wait(); err != nil {
+			log.Fatal(err)
+		}
+		result = fromJson(bytes).(map[string]interface{})
+		(*cache)[key] = result
+	} else {
+		result = cachedVal.(map[string]interface{})
 	}
-	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
+	return result
+}
+
+func lookUpResource(ctx context.Context, kind, namespace, name string) resource {
+	mapval := lookUpMap(ctx, kind, namespace, name)
+
+	if mapval == nil {
+		return nil
 	}
-	bytes, err := ioutil.ReadAll(stdout)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err := cmd.Wait(); err != nil {
-		log.Fatal(err)
-	}
-	return bytes
+
+	return mapToResource(ctx, mapval)
 }
 
 // Get all resource instances of a specific kind

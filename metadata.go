@@ -64,10 +64,11 @@ func mapToMetadata(
 			ormap := oref.(map[string]interface{})
 			orefs = append(
 				orefs,
-				mapToResource(ctx, getK8sResource(
+				getK8sResource(
+					ctx,
 					ormap["kind"].(string),
 					ns,
-					ormap["name"].(string))))
+					ormap["name"].(string)))
 		}
 	}
 

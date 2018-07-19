@@ -218,12 +218,7 @@ func (r *Resolver) PodByName(
 		Namespace string
 		Name      string
 	}) *podResolver {
-	if pmap :=
-		getK8sResource(ctx, PodKind, args.Namespace, args.Name); pmap != nil {
-		return &podResolver{ctx, mapToPod(ctx, pmap)}
-	}
-
-	return nil
+	return getK8sResource(ctx, PodKind, args.Namespace, args.Name).(*podResolver)
 }
 
 // Deployment lookups
@@ -268,12 +263,8 @@ func (r *Resolver) DeploymentByName(
 		Namespace string
 		Name      string
 	}) *deploymentResolver {
-	if dmap := getK8sResource(
-		ctx, DeploymentKind, args.Namespace, args.Name); dmap != nil {
-		return &deploymentResolver{ctx, mapToDeployment(ctx, dmap)}
-	}
-
-	return nil
+	return getK8sResource(
+		ctx, DeploymentKind, args.Namespace, args.Name).(*deploymentResolver)
 }
 
 // ReplicaSet lookups
@@ -318,12 +309,8 @@ func (r *Resolver) ReplicaSetByName(
 		Namespace string
 		Name      string
 	}) *replicaSetResolver {
-	if rmap := getK8sResource(
-		ctx, ReplicaSetKind, args.Namespace, args.Name); rmap != nil {
-		return &replicaSetResolver{ctx, mapToReplicaSet(ctx, rmap)}
-	}
-
-	return nil
+	return getK8sResource(
+		ctx, ReplicaSetKind, args.Namespace, args.Name).(*replicaSetResolver)
 }
 
 // StatefulSet lookups
@@ -368,12 +355,8 @@ func (r *Resolver) StatefulSetByName(
 		Namespace string
 		Name      string
 	}) *statefulSetResolver {
-	if rmap := getK8sResource(
-		ctx, StatefulSetKind, args.Namespace, args.Name); rmap != nil {
-		return &statefulSetResolver{ctx, mapToStatefulSet(ctx, rmap)}
-	}
-
-	return nil
+	return getK8sResource(
+		ctx, StatefulSetKind, args.Namespace, args.Name).(*statefulSetResolver)
 }
 
 // DaemonSet lookups
@@ -418,10 +401,6 @@ func (r *Resolver) DaemonSetByName(
 		Namespace string
 		Name      string
 	}) *daemonSetResolver {
-	if rmap := getK8sResource(
-		ctx, DaemonSetKind, args.Namespace, args.Name); rmap != nil {
-		return &daemonSetResolver{ctx, mapToDaemonSet(ctx, rmap)}
-	}
-
-	return nil
+	return getK8sResource(
+		ctx, DaemonSetKind, args.Namespace, args.Name).(*daemonSetResolver)
 }

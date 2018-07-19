@@ -58,12 +58,15 @@ func (r *ownerRef) RootOwner() *resourceResolver {
 
 // Fetch owners by getting ownerReferences and doing lookups based
 // on their contents
-func getRawOwner(val map[string]interface{}) map[string]interface{} {
+func getRawOwner(
+	ctx context.Context, val map[string]interface{}) map[string]interface{} {
 	if orefs := getMetadataField(val, "ownerReferences"); orefs != nil {
 		oArray := orefs.([]interface{})
 		if len(oArray) > 0 {
 			owner := oArray[0].(map[string]interface{})
-			if res := getK8sResource(owner["kind"].(string),
+			if res := getRawK8sResource(
+				ctx,
+				owner["kind"].(string),
 				getNamespace(val),
 				owner["name"].(string)); res != nil {
 				return res
@@ -75,17 +78,17 @@ func getRawOwner(val map[string]interface{}) map[string]interface{} {
 }
 
 func getOwner(ctx context.Context, val map[string]interface{}) resource {
-	return mapToResource(ctx, getRawOwner(val))
+	return mapToResource(ctx, getRawOwner(ctx, val))
 }
 
 func getRootOwner(ctx context.Context, val map[string]interface{}) resource {
-	result := getRawOwner(val)
+	result := getRawOwner(ctx, val)
 
 	if getUid(result) == getUid(val) {
 		return mapToResource(ctx, result)
 	}
 
-	return getRootOwner(ctx, getRawOwner(result))
+	return getRootOwner(ctx, getRawOwner(ctx, result))
 }
 
 func hasMatchingOwner(jsonObj map[string]interface{}, name, kind string) bool {
