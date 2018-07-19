@@ -66,34 +66,45 @@ func getAllK8sObjsOfKind(
 	ctx context.Context,
 	kind string,
 	test func(map[string]interface{}) bool) []resource {
-	cmd := exec.Command("/usr/local/bin/kubectl", "get",
-		"-o", "json", "--all-namespaces", kind)
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
-	}
-	bytes, err := ioutil.ReadAll(stdout)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err := cmd.Wait(); err != nil {
-		log.Fatal(err)
-	}
-	var results []resource
-	arr := (fromJson(bytes).(map[string]interface{}))["items"].([]interface{})
-	for _, res := range arr {
-		if test(res.(map[string]interface{})) {
-			results =
-				append(results, mapToResource(ctx, res.(map[string]interface{})))
+	cache := ctx.Value("queryCache").(*map[string]interface{})
+	results := (*cache)[kind]
+	if results == nil {
+		cmd := exec.Command("/usr/local/bin/kubectl", "get",
+			"-o", "json", "--all-namespaces", kind)
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			log.Fatal(err)
 		}
+		if err := cmd.Start(); err != nil {
+			log.Fatal(err)
+		}
+		bytes, err := ioutil.ReadAll(stdout)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := cmd.Wait(); err != nil {
+			log.Fatal(err)
+		}
+		var resources []resource
+		arr :=
+			(fromJson(bytes).(map[string]interface{}))["items"].([]interface{})
+		for _, res := range arr {
+			val := mapToResource(ctx, res.(map[string]interface{}))
+			(*cache)[cacheKey(kind,
+				val.Metadata().Namespace(), val.Metadata().Name())] = val
+			if test(res.(map[string]interface{})) {
+				resources = append(resources, val)
+			}
+		}
+		results = resources
 	}
 	if results == nil {
 		results = make([]resource, 0)
 	}
-	return results
+	if (*cache)[kind] == nil {
+		(*cache)[kind] = results
+	}
+	return results.([]resource)
 }
 
 // Get all resource instances of a specific kind in a specific namespace
@@ -101,32 +112,45 @@ func getAllK8sObjsOfKindInNamespace(
 	ctx context.Context,
 	kind, ns string,
 	test func(map[string]interface{}) bool) []resource {
-	cmd := exec.Command("/usr/local/bin/kubectl", "get",
-		"-o", "json", "--namespace", ns, kind)
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
-	}
-	bytes, err := ioutil.ReadAll(stdout)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err := cmd.Wait(); err != nil {
-		log.Fatal(err)
-	}
-	var results []resource
-	arr := (fromJson(bytes).(map[string]interface{}))["items"].([]interface{})
-	for _, res := range arr {
-		if test(res.(map[string]interface{})) {
-			results =
-				append(results, mapToResource(ctx, res.(map[string]interface{})))
+	cache := ctx.Value("queryCache").(*map[string]interface{})
+	results := (*cache)[kind]
+	if results == nil {
+		cmd := exec.Command("/usr/local/bin/kubectl", "get",
+			"-o", "json", "--namespace", ns, kind)
+		stdout, err := cmd.StdoutPipe()
+		if err != nil {
+			log.Fatal(err)
 		}
+		if err := cmd.Start(); err != nil {
+			log.Fatal(err)
+		}
+		bytes, err := ioutil.ReadAll(stdout)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := cmd.Wait(); err != nil {
+			log.Fatal(err)
+		}
+		var resources []resource
+		arr :=
+			(fromJson(bytes).(map[string]interface{}))["items"].([]interface{})
+		for _, res := range arr {
+			val := mapToResource(ctx, res.(map[string]interface{}))
+			if test(res.(map[string]interface{})) {
+				resources = append(resources, val)
+			}
+		}
+		results = resources
 	}
 	if results == nil {
 		results = make([]resource, 0)
 	}
-	return results
+	if (*cache)[kind] == nil {
+		(*cache)[kind] = results
+	}
+	return results.([]resource)
+}
+
+func cacheKey(kind, namespace, name string) string {
+	return kind + "#" + namespace + "#" + name
 }

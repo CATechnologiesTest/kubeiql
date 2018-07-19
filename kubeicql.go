@@ -218,7 +218,8 @@ func (r *Resolver) PodByName(
 		Namespace string
 		Name      string
 	}) *podResolver {
-	if pmap := getK8sResource(PodKind, args.Namespace, args.Name); pmap != nil {
+	if pmap :=
+		getK8sResource(ctx, PodKind, args.Namespace, args.Name); pmap != nil {
 		return &podResolver{ctx, mapToPod(ctx, pmap)}
 	}
 
@@ -268,7 +269,7 @@ func (r *Resolver) DeploymentByName(
 		Name      string
 	}) *deploymentResolver {
 	if dmap := getK8sResource(
-		DeploymentKind, args.Namespace, args.Name); dmap != nil {
+		ctx, DeploymentKind, args.Namespace, args.Name); dmap != nil {
 		return &deploymentResolver{ctx, mapToDeployment(ctx, dmap)}
 	}
 
@@ -318,7 +319,7 @@ func (r *Resolver) ReplicaSetByName(
 		Name      string
 	}) *replicaSetResolver {
 	if rmap := getK8sResource(
-		ReplicaSetKind, args.Namespace, args.Name); rmap != nil {
+		ctx, ReplicaSetKind, args.Namespace, args.Name); rmap != nil {
 		return &replicaSetResolver{ctx, mapToReplicaSet(ctx, rmap)}
 	}
 
@@ -368,7 +369,7 @@ func (r *Resolver) StatefulSetByName(
 		Name      string
 	}) *statefulSetResolver {
 	if rmap := getK8sResource(
-		StatefulSetKind, args.Namespace, args.Name); rmap != nil {
+		ctx, StatefulSetKind, args.Namespace, args.Name); rmap != nil {
 		return &statefulSetResolver{ctx, mapToStatefulSet(ctx, rmap)}
 	}
 
@@ -418,7 +419,7 @@ func (r *Resolver) DaemonSetByName(
 		Name      string
 	}) *daemonSetResolver {
 	if rmap := getK8sResource(
-		DaemonSetKind, args.Namespace, args.Name); rmap != nil {
+		ctx, DaemonSetKind, args.Namespace, args.Name); rmap != nil {
 		return &daemonSetResolver{ctx, mapToDaemonSet(ctx, rmap)}
 	}
 

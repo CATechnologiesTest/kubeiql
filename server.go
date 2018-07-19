@@ -15,6 +15,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/gorilla/mux"
 	graphql "github.com/neelance/graphql-go"
@@ -45,7 +46,13 @@ func main() {
 		}))
 	r.Handle("/query",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			handler.ServeHTTP(w, r)
+			cache := make(map[string]interface{})
+			handler.ServeHTTP(w,
+				r.WithContext(
+					context.WithValue(
+						r.Context(),
+						"queryCache",
+						&cache)))
 		})).Methods("POST")
 	r.HandleFunc("/query",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
