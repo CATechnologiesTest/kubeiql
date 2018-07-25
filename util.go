@@ -1,4 +1,4 @@
-// Copyright 2018 Yipee.io
+// Copyright (c) 2018 CA. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,4 +77,87 @@ func getMetadataField(
 	}
 
 	return nil
+}
+
+type jsonGetter struct {
+	jsonObj map[string]interface{}
+}
+
+func (jg jsonGetter) boolItem(field string) bool {
+	return jg.jsonObj[field].(bool)
+}
+
+func (jg jsonGetter) intItem(field string) int32 {
+	return jg.jsonObj[field].(int32)
+}
+
+func (jg jsonGetter) stringItem(field string) string {
+	return jg.jsonObj[field].(string)
+}
+
+func (jg jsonGetter) arrayItem(field string) JsonArray {
+	return jg.jsonObj[field].(JsonArray)
+}
+
+func (jg jsonGetter) objItem(field string) JsonObject {
+	return jg.jsonObj[field].(JsonObject)
+}
+
+func (jg jsonGetter) boolItemOr(field string, defVal bool) bool {
+	if val := jg.jsonObj[field]; val != nil {
+		return val.(bool)
+	}
+
+	return defVal
+}
+
+func (jg jsonGetter) intItemOr(field string, defVal int32) int32 {
+	if val := jg.jsonObj[field]; val != nil {
+		if num, ok := val.(float64); ok {
+			return int32(num)
+		} else {
+			return val.(int32)
+		}
+	}
+
+	return defVal
+}
+
+func (jg jsonGetter) stringRefItemOr(field string, defVal *string) *string {
+	if val := jg.jsonObj[field]; val != nil {
+		strVal := val.(string)
+		return &strVal
+	}
+
+	return defVal
+}
+
+func (jg jsonGetter) stringItemOr(field string, defVal string) string {
+	if val := jg.jsonObj[field]; val != nil {
+		return val.(string)
+	}
+
+	return defVal
+}
+
+func (jg jsonGetter) arrayItemOr(field string, defVal *JsonArray) *JsonArray {
+	if val, ok := jg.jsonObj[field].([]interface{}); ok {
+		arrVal := JsonArray(val)
+		return &arrVal
+	}
+
+	return defVal
+}
+
+func (jg jsonGetter) objItemOr(field string, defVal *JsonObject) *JsonObject {
+	if val, ok := jg.jsonObj[field].(map[string]interface{}); ok {
+		objVal := JsonObject(val)
+		return &objVal
+	}
+
+	return defVal
+}
+
+func jgetter(jsonObj map[string]interface{}) jsonGetter {
+	return jsonGetter{jsonObj}
 }

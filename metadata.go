@@ -1,4 +1,4 @@
-// Copyright 2018 Yipee.io
+// Copyright (c) 2018 CA. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,12 +16,14 @@ package main
 
 import (
 	"context"
+	//	"fmt"
 )
 
 // Kubernetes metadata
 type metadata struct {
 	CreationTimestamp *string
 	GenerateName      *string
+	Generation        *int32
 	Labels            *[]label
 	Name              string
 	Namespace         string
@@ -50,6 +52,14 @@ func mapToMetadata(
 		m.CreationTimestamp = &gn
 	} else {
 		m.CreationTimestamp = nil
+	}
+	if genVal := jsonObj["generation"]; genVal != nil {
+		if num, ok := genVal.(float64); ok {
+			numval := int32(num)
+			m.Generation = &numval
+		} else {
+			m.Generation = (genVal.(*int32))
+		}
 	}
 	m.Labels = mapToLabels(mapItem(jsonObj, "labels"))
 	m.Name = jsonObj["name"].(string)
@@ -83,6 +93,10 @@ func (r *metadataResolver) CreationTimestamp() *string {
 
 func (r *metadataResolver) GenerateName() *string {
 	return r.m.GenerateName
+}
+
+func (r *metadataResolver) Generation() *int32 {
+	return r.m.Generation
 }
 
 func (r *metadataResolver) Labels() []*labelResolver {

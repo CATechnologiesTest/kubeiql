@@ -1,4 +1,4 @@
-// Copyright 2018 Yipee.io
+// Copyright (c) 2018 CA. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,7 +42,8 @@ func mapToResource(
 
 	switch kind {
 	case DeploymentKind:
-		return &deploymentResolver{ctx, mapToDeployment(ctx, rMap)}
+		mtd := mapToDeployment(ctx, rMap)
+		return &deploymentResolver{ctx, mtd}
 	case ReplicaSetKind:
 		return &replicaSetResolver{ctx, mapToReplicaSet(ctx, rMap)}
 	case DaemonSetKind:

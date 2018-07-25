@@ -1,4 +1,4 @@
-// Copyright 2018 Yipee.io
+// Copyright (c) 2018 CA. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,10 +40,10 @@ func mapToLabels(lMap map[string]interface{}) *[]label {
 	return &labels
 }
 
-func (r *labelResolver) Name() string {
+func (r labelResolver) Name() string {
 	return r.l.Name
 }
 
-func (r *labelResolver) Value() string {
+func (r labelResolver) Value() string {
 	return r.l.Value
 }

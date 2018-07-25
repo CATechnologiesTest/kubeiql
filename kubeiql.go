@@ -1,4 +1,4 @@
-// Copyright 2018 Yipee.io
+// Copyright (c) 2018 CA. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -114,6 +114,25 @@ var Schema = `
     type Deployment implements Resource {
       # The metadata for the deployment (name, labels, namespace, etc.)
       metadata: Metadata!
+      # Minimum number of seconds for which a newly created pod should be
+      # ready without any of its container crashing, for it to be considered
+      # available (defaults to 0)
+      minReadySeconds: Int!
+      # Whether or not the deployment is paused
+      paused: Boolean!
+      # The maximum time in seconds for a deployment to make progress before
+      # it is considered to be failed.
+      progressDeadlineSeconds: Int!
+      # Number of desired pods (default: 1).
+      replicas: Int!
+      # The number of old ReplicaSets to retain to allow rollback (default: 10).
+      revisionHistoryLimit: Int!
+      # Label selector for pods.
+      selector: LabelSelector
+      # The deployment strategy to use to replace existing pods with new ones.
+      strategy: DeploymentStrategy!
+      # Template describing the pods that will be created.
+      # template: PodTemplateSpec! XXXXX - not yet
       # The direct owner of the deployment
       owner: Resource
       # The root owner of the deployment
@@ -128,6 +147,8 @@ var Schema = `
       creationTimestamp: String
       # Prefix for generated names
       generateName: String
+      # Sequence number for state transitions
+      generation: Int
       # Top level labels
       labels: [Label!]!
       # Generated name
@@ -142,6 +163,57 @@ var Schema = `
       selfLink: String!
       # UUID
       uid: String!
+    }
+
+    # LabelSelector for matching pods
+    type LabelSelector {
+      # constraint expressions for labels
+      matchExpressions: [LabelSelectorRequirement!]
+      # key/value matches
+      matchLabels: [Label!]
+    }
+
+    # Constraint expression for labels
+    type LabelSelectorRequirement {
+      # The label key that the selector applies to
+      key: String!
+      # The expression operator
+      operator: Operator!
+      # The values to match against
+      values: [String!]!
+    }
+
+    # Constraint operators for labels
+    enum Operator {
+      In NotIn Exists DoesNotExist
+    }
+
+    # deployment strategy
+    type DeploymentStrategy {
+      # Rolling update config parameters
+      rollingUpdate: RollingUpdateDeployment
+      # Type of deployment
+      type: DeploymentStrategyType
+    }
+
+    # Types of deployment strategy
+    enum DeploymentStrategyType {
+      Recreate RollingUpdate
+    }
+
+    # The following section is a mess due to the questionable decision by
+    # the Kubernetes team to make certain fields contain either ints or
+    # strings (WHY?????)
+
+    # rolling update parameters
+    type  RollingUpdateDeployment {
+      # The maximum number of pods that can be scheduled above the desired
+      # number of pods.
+      maxSurgeInt: Int
+      maxSurgeString: String
+      # The maximum number of pods that can be unavailable during the update.
+      maxUnavailableInt: Int
+      maxUnavailableString: String
     }
 
     # A label
@@ -175,6 +247,10 @@ const DeploymentKind = "Deployment"
 // start as methods on Resolver
 type Resolver struct {
 }
+
+// Objects in json are unmarshalled into map[string]interface{}
+type JsonObject map[string]interface{}
+type JsonArray []interface{}
 
 // Pod lookups
 func (r *Resolver) AllPods(ctx context.Context) *[]*podResolver {
