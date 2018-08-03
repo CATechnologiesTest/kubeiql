@@ -6,6 +6,8 @@ interface to a Kubernetes cluster. It is not intended to entirely replace the
 ReST APIs as some of them (particularly the watch APIs) don't map well
 onto GraphQL.
 
+Yipee.io is a CA, Inc Accelerator project.  
+
 ## Current Status
 
 pre-alpha
