@@ -36,7 +36,7 @@ Before filing a new issue, check Known Issues to see if your problem already exi
 * Anything else that seems relevant. 
 
 ## License
-By contributing to kubiql, you agree that your contributions will be licensed under its [license][license].
+By contributing to kubeiql, you agree that your contributions will be licensed under its [license][license].
 
 [cla]: https://www.clahub.com/agreements/yipeeio/kubeiql
 [license]: /LICENSE
