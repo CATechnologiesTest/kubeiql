@@ -1,5 +1,5 @@
 # Contribute to Kubeiql
-Contributions are welcome and much appreciated. Just follow these easy steps to contribute.
+Kubeiql is maintained by Yipee.io, a CA, Inc. Acclerator project.  External contributions are welcome and much appreciated. Just follow these easy steps to contribute.
 
 ## Code Standard and Guideline
 For consistency, we ask that you adhere to some basic code guidelines when contributing to the Kubeiql. Please run [gofmt](https://golang.org/cmd/gofmt/) on your code before submitting a pull request.
