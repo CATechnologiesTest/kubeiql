@@ -36,7 +36,7 @@ type statefulSetResolver struct {
 // Translate unmarshalled json into a deployment object
 func mapToStatefulSet(
 	ctx context.Context,
-	jsonObj map[string]interface{}) statefulSet {
+	jsonObj JsonObject) statefulSet {
 	placeholder := &ownerRef{ctx, jsonObj, nil}
 	owner := placeholder
 	rootOwner := placeholder
@@ -47,17 +47,17 @@ func mapToStatefulSet(
 
 // StatefulSets have pods as children
 func getStatefulSetPods(ctx context.Context, s statefulSet) *[]pod {
-	rsName := s.Metadata.Name
-	rsNamePrefix := rsName + "-"
-	rsNamespace := s.Metadata.Namespace
+	ssName := *s.Metadata.Name
+	ssNamePrefix := ssName + "-"
+	ssNamespace := *s.Metadata.Namespace
 
 	pset := getAllK8sObjsOfKindInNamespace(
 		ctx,
 		PodKind,
-		rsNamespace,
-		func(jobj map[string]interface{}) bool {
-			return (strings.HasPrefix(getName(jobj), rsNamePrefix) &&
-				hasMatchingOwner(jobj, rsName, StatefulSetKind))
+		ssNamespace,
+		func(jobj JsonObject) bool {
+			return (strings.HasPrefix(getName(jobj), ssNamePrefix) &&
+				hasMatchingOwner(jobj, ssName, StatefulSetKind))
 		})
 
 	results := make([]pod, len(pset))
@@ -75,8 +75,8 @@ func (r *statefulSetResolver) Kind() string {
 	return StatefulSetKind
 }
 
-func (r *statefulSetResolver) Metadata() *metadataResolver {
-	return &metadataResolver{r.ctx, r.s.Metadata}
+func (r *statefulSetResolver) Metadata() metadataResolver {
+	return metadataResolver{r.ctx, r.s.Metadata}
 }
 
 func (r *statefulSetResolver) Owner() *resourceResolver {

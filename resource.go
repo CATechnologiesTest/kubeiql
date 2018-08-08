@@ -24,7 +24,7 @@ import (
 
 type resource interface {
 	Kind() string
-	Metadata() *metadataResolver
+	Metadata() metadataResolver
 	Owner() *resourceResolver
 	RootOwner() *resourceResolver
 }
@@ -37,7 +37,7 @@ type resourceResolver struct {
 // Translate a map containing unmarshalled json into a resource instance.
 func mapToResource(
 	ctx context.Context,
-	rMap map[string]interface{}) resource {
+	rMap JsonObject) resource {
 	kind := getKind(rMap)
 
 	switch kind {
@@ -89,7 +89,7 @@ func (r *resourceResolver) Kind() string {
 	return r.r.Kind()
 }
 
-func (r *resourceResolver) Metadata() *metadataResolver {
+func (r *resourceResolver) Metadata() metadataResolver {
 	return r.r.Metadata()
 }
 

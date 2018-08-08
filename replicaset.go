@@ -36,7 +36,7 @@ type replicaSetResolver struct {
 // Translate unmarshalled json into a deployment object
 func mapToReplicaSet(
 	ctx context.Context,
-	jsonObj map[string]interface{}) replicaSet {
+	jsonObj JsonObject) replicaSet {
 	placeholder := &ownerRef{ctx, jsonObj, nil}
 	owner := placeholder
 	rootOwner := placeholder
@@ -47,15 +47,15 @@ func mapToReplicaSet(
 
 // ReplicaSets have pods as children
 func getReplicaSetPods(ctx context.Context, r replicaSet) *[]pod {
-	rsName := r.Metadata.Name
+	rsName := *r.Metadata.Name
 	rsNamePrefix := rsName + "-"
-	rsNamespace := r.Metadata.Namespace
+	rsNamespace := *r.Metadata.Namespace
 
 	pset := getAllK8sObjsOfKindInNamespace(
 		ctx,
 		PodKind,
 		rsNamespace,
-		func(jobj map[string]interface{}) bool {
+		func(jobj JsonObject) bool {
 			return (strings.HasPrefix(getName(jobj), rsNamePrefix) &&
 				hasMatchingOwner(jobj, rsName, ReplicaSetKind))
 		})
@@ -75,8 +75,8 @@ func (r *replicaSetResolver) Kind() string {
 	return ReplicaSetKind
 }
 
-func (r *replicaSetResolver) Metadata() *metadataResolver {
-	return &metadataResolver{r.ctx, r.r.Metadata}
+func (r *replicaSetResolver) Metadata() metadataResolver {
+	return metadataResolver{r.ctx, r.r.Metadata}
 }
 
 func (r *replicaSetResolver) Owner() *resourceResolver {

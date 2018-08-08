@@ -16,34 +16,20 @@ package main
 
 import (
 	"context"
+	//	"fmt"
 )
 
-// Single label value within a Kubernetes object
-type label struct {
-	Name  string
-	Value string
+// Containers do the actual work in Kubernetes
+
+type container struct {
 }
 
-type labelResolver struct {
+type containerResolver struct {
 	ctx context.Context
-	l   *label
+	c   container
 }
 
-// Translate unmarshalled json into a set of labels
-func mapToLabels(lMap JsonObject) *[]label {
-	var labels []label
-
-	for k, v := range lMap {
-		labels = append(labels, label{k, v.(string)})
-	}
-
-	return &labels
-}
-
-func (r labelResolver) Name() string {
-	return r.l.Name
-}
-
-func (r labelResolver) Value() string {
-	return r.l.Value
+// Translate unmarshalled json into a deployment object
+func mapToContainer(ctx context.Context, jsonObj JsonObject) container {
+	return container{}
 }

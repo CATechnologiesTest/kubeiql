@@ -1,0 +1,175 @@
+{
+  "apiVersion": "apps/v1",
+  "kind": "ReplicaSet",
+  "metadata": {
+    "annotations": {
+      "deployment.kubernetes.io/desired-replicas": "1",
+      "deployment.kubernetes.io/max-replicas": "2",
+      "deployment.kubernetes.io/revision": "1"
+    },
+    "creationTimestamp": "2018-07-02T14:53:53Z",
+    "generation": 1,
+    "labels": {
+      "app": "clunky-sabertooth-joomla",
+      "pod-template-hash": "1808875418"
+    },
+    "name": "clunky-sabertooth-joomla-5d4ddc985d",
+    "namespace": "default",
+    "ownerReferences": [
+      {
+        "apiVersion": "extensions/v1beta1",
+        "blockOwnerDeletion": true,
+        "controller": true,
+        "kind": "Deployment",
+        "name": "clunky-sabertooth-joomla",
+        "uid": "bcc99362-7e07-11e8-9fd6-0800279d9e51"
+      }
+    ],
+    "resourceVersion": "109756",
+    "selfLink": "/apis/apps/v1/namespaces/default/replicasets/clunky-sabertooth-joomla-5d4ddc985d",
+    "uid": "bcccd488-7e07-11e8-9fd6-0800279d9e51"
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "matchLabels": {
+        "app": "clunky-sabertooth-joomla",
+        "pod-template-hash": "1808875418"
+      }
+    },
+    "template": {
+      "metadata": {
+        "creationTimestamp": null,
+        "labels": {
+          "app": "clunky-sabertooth-joomla",
+          "pod-template-hash": "1808875418"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "ALLOW_EMPTY_PASSWORD",
+                "value": "yes"
+              },
+              {
+                "name": "MARIADB_HOST",
+                "value": "clunky-sabertooth-mariadb"
+              },
+              {
+                "name": "MARIADB_PORT_NUMBER",
+                "value": "3306"
+              },
+              {
+                "name": "JOOMLA_DATABASE_NAME",
+                "value": "bitnami_joomla"
+              },
+              {
+                "name": "JOOMLA_DATABASE_USER",
+                "value": "bn_joomla"
+              },
+              {
+                "name": "JOOMLA_DATABASE_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "mariadb-password",
+                    "name": "clunky-sabertooth-mariadb"
+                  }
+                }
+              },
+              {
+                "name": "JOOMLA_USERNAME",
+                "value": "user"
+              },
+              {
+                "name": "JOOMLA_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "joomla-password",
+                    "name": "clunky-sabertooth-joomla"
+                  }
+                }
+              },
+              {
+                "name": "JOOMLA_EMAIL",
+                "value": "user@example.com"
+              }
+            ],
+            "image": "docker.io/bitnami/joomla:3.8.10",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "clunky-sabertooth-joomla",
+            "ports": [
+              {
+                "containerPort": 80,
+                "name": "http",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 443,
+                "name": "https",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "failureThreshold": 6,
+              "httpGet": {
+                "path": "/index.php",
+                "port": "http",
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 30,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 5
+            },
+            "resources": {
+              "requests": {
+                "cpu": "300m",
+                "memory": "512Mi"
+              }
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/bitnami/joomla",
+                "name": "joomla-data"
+              },
+              {
+                "mountPath": "/bitnami/apache",
+                "name": "apache-data"
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": null,
+        "terminationGracePeriodSeconds": 30,
+        "volumes": [
+          {
+            "name": "joomla-data",
+            "persistentVolumeClaim": {
+              "claimName": "clunky-sabertooth-joomla-joomla"
+            }
+          },
+          {
+            "name": "apache-data",
+            "persistentVolumeClaim": {
+              "claimName": "clunky-sabertooth-joomla-apache"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "status": {
+    "availableReplicas": 1,
+    "fullyLabeledReplicas": 1,
+    "observedGeneration": 1,
+    "readyReplicas": 1,
+    "replicas": 1
+  }
+}

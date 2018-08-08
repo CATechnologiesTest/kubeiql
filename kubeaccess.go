@@ -31,7 +31,7 @@ func getK8sResource(ctx context.Context, kind, namespace, name string) resource 
 }
 
 func getRawK8sResource(
-	ctx context.Context, kind, namespace, name string) map[string]interface{} {
+	ctx context.Context, kind, namespace, name string) JsonObject {
 	return lookUpMap(ctx, kind, namespace, name)
 }
 
@@ -45,14 +45,39 @@ func fromJson(val []byte) interface{} {
 	return result
 }
 
+var testContext *context.Context = nil
+
+func setTestContext(ctx *context.Context) {
+	testContext = ctx
+}
+
+func getTestContext() *context.Context {
+	return testContext
+}
+
+func getCache(inctx context.Context) *JsonObject {
+	ctx := &inctx
+	if isTest() {
+		ctx = getTestContext()
+	}
+	return (*ctx).Value("queryCache").(*JsonObject)
+}
+
+func isTest() bool {
+	return testContext != nil
+}
+
 func lookUpMap(
 	ctx context.Context,
-	kind, namespace, name string) map[string]interface{} {
-	cache := ctx.Value("queryCache").(*map[string]interface{})
-	key := cacheKey(kind, namespace, name)
+	kind, namespace, name string) JsonObject {
+	cache := getCache(ctx)
+	key := rawCacheKey(kind, namespace, name)
 	cachedVal := (*cache)[key]
-	var result map[string]interface{}
+	var result JsonObject
 	if cachedVal == nil {
+		if isTest() {
+			return map[string]interface{}{}
+		}
 		cmd := exec.Command(KubectlPath, "get",
 			"-o", "json", "--namespace", namespace, kind, name)
 		stdout, err := cmd.StdoutPipe()
@@ -69,10 +94,10 @@ func lookUpMap(
 		if err := cmd.Wait(); err != nil {
 			log.Fatal(err)
 		}
-		result = fromJson(bytes).(map[string]interface{})
+		result = fromJson(bytes).(JsonObject)
 		(*cache)[key] = result
 	} else {
-		result = cachedVal.(map[string]interface{})
+		result = cachedVal.(JsonObject)
 	}
 	return result
 }
@@ -91,10 +116,13 @@ func lookUpResource(ctx context.Context, kind, namespace, name string) resource 
 func getAllK8sObjsOfKind(
 	ctx context.Context,
 	kind string,
-	test func(map[string]interface{}) bool) []resource {
-	cache := ctx.Value("queryCache").(*map[string]interface{})
+	test func(JsonObject) bool) []resource {
+	cache := getCache(ctx)
 	results := (*cache)[kind]
 	if results == nil {
+		if isTest() {
+			return make([]resource, 0)
+		}
 		cmd := exec.Command(KubectlPath, "get",
 			"-o", "json", "--all-namespaces", kind)
 		stdout, err := cmd.StdoutPipe()
@@ -112,13 +140,12 @@ func getAllK8sObjsOfKind(
 			log.Fatal(err)
 		}
 		var resources []resource
-		arr :=
-			(fromJson(bytes).(map[string]interface{}))["items"].([]interface{})
+		arr := (fromJson(bytes).(JsonObject))["items"].(JsonArray)
 		for _, res := range arr {
-			val := mapToResource(ctx, res.(map[string]interface{}))
+			val := mapToResource(ctx, res.(JsonObject))
 			(*cache)[cacheKey(kind,
-				val.Metadata().Namespace(), val.Metadata().Name())] = val
-			if test(res.(map[string]interface{})) {
+				*val.Metadata().Namespace(), *val.Metadata().Name())] = val
+			if test(res.(JsonObject)) {
 				resources = append(resources, val)
 			}
 		}
@@ -137,10 +164,13 @@ func getAllK8sObjsOfKind(
 func getAllK8sObjsOfKindInNamespace(
 	ctx context.Context,
 	kind, ns string,
-	test func(map[string]interface{}) bool) []resource {
-	cache := ctx.Value("queryCache").(*map[string]interface{})
+	test func(JsonObject) bool) []resource {
+	cache := getCache(ctx)
 	results := (*cache)[kind]
 	if results == nil {
+		if isTest() {
+			return make([]resource, 0)
+		}
 		cmd := exec.Command(KubectlPath, "get",
 			"-o", "json", "--namespace", ns, kind)
 		stdout, err := cmd.StdoutPipe()
@@ -158,11 +188,10 @@ func getAllK8sObjsOfKindInNamespace(
 			log.Fatal(err)
 		}
 		var resources []resource
-		arr :=
-			(fromJson(bytes).(map[string]interface{}))["items"].([]interface{})
+		arr := (fromJson(bytes).(JsonObject))["items"].(JsonArray)
 		for _, res := range arr {
-			val := mapToResource(ctx, res.(map[string]interface{}))
-			if test(res.(map[string]interface{})) {
+			val := mapToResource(ctx, res.(JsonObject))
+			if test(res.(JsonObject)) {
 				resources = append(resources, val)
 			}
 		}
@@ -179,4 +208,8 @@ func getAllK8sObjsOfKindInNamespace(
 
 func cacheKey(kind, namespace, name string) string {
 	return kind + "#" + namespace + "#" + name
+}
+
+func rawCacheKey(kind, namespace, name string) string {
+	return "raw#" + kind + "#" + namespace + "#" + name
 }

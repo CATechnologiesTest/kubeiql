@@ -51,7 +51,7 @@ func main() {
 		}))
 	r.Handle("/query",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			cache := make(map[string]interface{})
+			cache := make(JsonObject)
 			handler.ServeHTTP(w,
 				r.WithContext(
 					context.WithValue(

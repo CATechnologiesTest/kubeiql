@@ -23,7 +23,14 @@ import (
 // Top level Kubernetes replicated controller. Deployments are built out
 // of ReplicaSets.
 type deployment struct {
-	Metadata                metadata
+	Metadata    metadata
+	Spec        deploymentSpec
+	Owner       resource
+	RootOwner   resource
+	ReplicaSets *[]replicaSet
+}
+
+type deploymentSpec struct {
 	MinReadySeconds         int32
 	Paused                  bool
 	ProgressDeadlineSeconds int32
@@ -31,10 +38,12 @@ type deployment struct {
 	RevisionHistoryLimit    int32
 	Selector                *labelSelector
 	Strategy                *deploymentStrategy
-	//  Template PodTemplateSpec
-	Owner       resource
-	RootOwner   resource
-	ReplicaSets *[]replicaSet
+	Template                podTemplateSpec
+}
+
+type podTemplateSpec struct {
+	Metadata metadata
+	Spec     podSpec
 }
 
 type labelSelector struct {
@@ -65,6 +74,11 @@ type deploymentResolver struct {
 	d   deployment
 }
 
+type deploymentSpecResolver struct {
+	ctx context.Context
+	d   deploymentSpec
+}
+
 type labelSelectorResolver struct {
 	ctx context.Context
 	l   labelSelector
@@ -85,13 +99,28 @@ type rollingUpdateDeploymentResolver struct {
 	r   *rollingUpdateDeployment
 }
 
+type podTemplateSpecResolver struct {
+	ctx context.Context
+	p   podTemplateSpec
+}
+
 // Translate unmarshalled json into a deployment object
 func mapToDeployment(
 	ctx context.Context,
-	jsonObj map[string]interface{}) deployment {
-	jg := jgetter(jsonObj["spec"].(map[string]interface{}))
+	jsonObj JsonObject) deployment {
+	ns := getNamespace(jsonObj)
 	return deployment{
-		mapToMetadata(ctx, getNamespace(jsonObj), mapItem(jsonObj, "metadata")),
+		mapToMetadata(ctx, ns, mapItem(jsonObj, "metadata")),
+		extractDeploymentSpec(ctx, ns, mapItem(jsonObj, "spec")),
+		nil,
+		nil,
+		nil}
+}
+
+func extractDeploymentSpec(ctx context.Context, ns string, jsonObj JsonObject) deploymentSpec {
+	jg := jgetter(jsonObj)
+	template := mapItem(jsonObj, "template")
+	return deploymentSpec{
 		jg.intItemOr("minReadySeconds", 0),
 		jg.boolItemOr("paused", false),
 		jg.intItemOr("progressDeadlineSeconds", 600),
@@ -99,9 +128,9 @@ func mapToDeployment(
 		jg.intItemOr("revisionHistoryLimit", 10),
 		mapToSelector(jg.objItemOr("selector", nil)),
 		mapToStrategy(jg.objItemOr("strategy", nil)),
-		nil,
-		nil,
-		nil}
+		podTemplateSpec{
+			mapToMetadata(ctx, ns, mapItem(template, "metadata")),
+			mapToPodSpec(ctx, mapItem(template, "spec"))}}
 }
 
 func mapToSelector(sel *JsonObject) *labelSelector {
@@ -163,23 +192,35 @@ func mapToStrategy(strat *JsonObject) *deploymentStrategy {
 	}
 
 	rudg := jgetter(*updateItem)
-	ms := rudg.stringItemOr("maxSurgeString", "25%")
-	mu := rudg.stringItemOr("maxUnavailableString", "25%")
-	return &deploymentStrategy{&rollingUpdateDeployment{nil, &ms, nil, &mu},
+	is := rudg.intRefItemOr("maxSurge", nil)
+	iu := rudg.intRefItemOr("maxUnavailable", nil)
+	ms := rudg.stringRefItemOr("maxSurgeString", nil)
+	mu := rudg.stringRefItemOr("maxUnavailableString", nil)
+	defval := "25%"
+
+	if is == nil && ms == nil {
+		ms = &defval
+	}
+
+	if iu == nil && mu == nil {
+		mu = &defval
+	}
+
+	return &deploymentStrategy{&rollingUpdateDeployment{is, ms, iu, mu},
 		sType}
 }
 
 // Retrieve the ReplicaSets comprising the deployment
 func getReplicaSets(ctx context.Context, d deployment) *[]replicaSet {
-	depName := d.Metadata.Name
+	depName := *d.Metadata.Name
 	depNamePrefix := depName + "-"
-	depNamespace := d.Metadata.Namespace
+	depNamespace := *d.Metadata.Namespace
 
 	rsets := getAllK8sObjsOfKindInNamespace(
 		ctx,
 		"ReplicaSet",
 		depNamespace,
-		func(jobj map[string]interface{}) bool {
+		func(jobj JsonObject) bool {
 			return (strings.HasPrefix(getName(jobj), depNamePrefix) &&
 				hasMatchingOwner(jobj, depName, DeploymentKind))
 		})
@@ -232,45 +273,26 @@ func (r labelSelectorRequirementResolver) Values() []string {
 	return r.l.Values
 }
 
+// Pod template spec implementations
+func (r podTemplateSpecResolver) Metadata() metadataResolver {
+	return metadataResolver{r.ctx, r.p.Metadata}
+}
+
+func (r podTemplateSpecResolver) Spec() podSpecResolver {
+	return podSpecResolver{r.ctx, r.p.Spec}
+}
+
 // Resource method implementations
 func (r *deploymentResolver) Kind() string {
 	return DeploymentKind
 }
 
-func (r *deploymentResolver) Metadata() *metadataResolver {
-	return &metadataResolver{r.ctx, r.d.Metadata}
+func (r *deploymentResolver) Metadata() metadataResolver {
+	return metadataResolver{r.ctx, r.d.Metadata}
 }
 
-func (r *deploymentResolver) MinReadySeconds() int32 {
-	return r.d.MinReadySeconds
-}
-
-func (r *deploymentResolver) Paused() bool {
-	return r.d.Paused
-}
-
-func (r *deploymentResolver) ProgressDeadlineSeconds() int32 {
-	return r.d.ProgressDeadlineSeconds
-}
-
-func (r *deploymentResolver) Replicas() int32 {
-	return r.d.Replicas
-}
-
-func (r *deploymentResolver) RevisionHistoryLimit() int32 {
-	return r.d.RevisionHistoryLimit
-}
-
-func (r *deploymentResolver) Selector() *labelSelectorResolver {
-	if r.d.Selector != nil {
-		return &labelSelectorResolver{r.ctx, *r.d.Selector}
-	}
-
-	return nil
-}
-
-func (r *deploymentResolver) Strategy() *deploymentStrategyResolver {
-	return &deploymentStrategyResolver{r.ctx, r.d.Strategy}
+func (r *deploymentResolver) Spec() deploymentSpecResolver {
+	return deploymentSpecResolver{r.ctx, r.d.Spec}
 }
 
 func (r *deploymentResolver) Owner() *resourceResolver {
@@ -279,6 +301,43 @@ func (r *deploymentResolver) Owner() *resourceResolver {
 
 func (r *deploymentResolver) RootOwner() *resourceResolver {
 	return &resourceResolver{r.ctx, &deploymentResolver{r.ctx, r.d}}
+}
+
+// Deployment spec implementations
+func (r deploymentSpecResolver) MinReadySeconds() int32 {
+	return r.d.MinReadySeconds
+}
+
+func (r deploymentSpecResolver) Paused() bool {
+	return r.d.Paused
+}
+
+func (r deploymentSpecResolver) ProgressDeadlineSeconds() int32 {
+	return r.d.ProgressDeadlineSeconds
+}
+
+func (r deploymentSpecResolver) Replicas() int32 {
+	return r.d.Replicas
+}
+
+func (r deploymentSpecResolver) RevisionHistoryLimit() int32 {
+	return r.d.RevisionHistoryLimit
+}
+
+func (r deploymentSpecResolver) Selector() *labelSelectorResolver {
+	if r.d.Selector != nil {
+		return &labelSelectorResolver{r.ctx, *r.d.Selector}
+	}
+
+	return nil
+}
+
+func (r deploymentSpecResolver) Template() podTemplateSpecResolver {
+	return podTemplateSpecResolver{r.ctx, r.d.Template}
+}
+
+func (r deploymentSpecResolver) Strategy() *deploymentStrategyResolver {
+	return &deploymentStrategyResolver{r.ctx, r.d.Strategy}
 }
 
 // Resolve child ReplicaSets

@@ -36,7 +36,7 @@ type daemonSetResolver struct {
 // Translate unmarshalled json into a deployment object
 func mapToDaemonSet(
 	ctx context.Context,
-	jsonObj map[string]interface{}) daemonSet {
+	jsonObj JsonObject) daemonSet {
 	placeholder := &ownerRef{ctx, jsonObj, nil}
 	owner := placeholder
 	rootOwner := placeholder
@@ -47,15 +47,15 @@ func mapToDaemonSet(
 
 // DaemonSets have pods as children
 func getDaemonSetPods(ctx context.Context, d daemonSet) *[]pod {
-	dsName := d.Metadata.Name
+	dsName := *d.Metadata.Name
 	dsNamePrefix := dsName + "-"
-	dsNamespace := d.Metadata.Namespace
+	dsNamespace := *d.Metadata.Namespace
 
 	pset := getAllK8sObjsOfKindInNamespace(
 		ctx,
 		PodKind,
 		dsNamespace,
-		func(jobj map[string]interface{}) bool {
+		func(jobj JsonObject) bool {
 			return (strings.HasPrefix(getName(jobj), dsNamePrefix) &&
 				hasMatchingOwner(jobj, dsName, DaemonSetKind))
 		})
@@ -75,8 +75,8 @@ func (r *daemonSetResolver) Kind() string {
 	return DaemonSetKind
 }
 
-func (r *daemonSetResolver) Metadata() *metadataResolver {
-	return &metadataResolver{r.ctx, r.d.Metadata}
+func (r *daemonSetResolver) Metadata() metadataResolver {
+	return metadataResolver{r.ctx, r.d.Metadata}
 }
 
 func (r *daemonSetResolver) Owner() *resourceResolver {

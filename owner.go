@@ -23,7 +23,7 @@ import (
 // has no owner, we treat it as its own owner
 type ownerRef struct {
 	ctx         context.Context
-	ref         map[string]interface{}
+	ref         JsonObject
 	cachedOwner resource // cached info for on-demand lookup
 }
 
@@ -35,7 +35,7 @@ func (r *ownerRef) Kind() string {
 	return r.cachedOwner.Kind()
 }
 
-func (r *ownerRef) Metadata() *metadataResolver {
+func (r *ownerRef) Metadata() metadataResolver {
 	if r.cachedOwner == nil {
 		r.cachedOwner = getOwner(r.ctx, r.ref)
 	}
@@ -59,11 +59,11 @@ func (r *ownerRef) RootOwner() *resourceResolver {
 // Fetch owners by getting ownerReferences and doing lookups based
 // on their contents
 func getRawOwner(
-	ctx context.Context, val map[string]interface{}) map[string]interface{} {
+	ctx context.Context, val JsonObject) JsonObject {
 	if orefs := getMetadataField(val, "ownerReferences"); orefs != nil {
-		oArray := orefs.([]interface{})
+		oArray := orefs.(JsonArray)
 		if len(oArray) > 0 {
-			owner := oArray[0].(map[string]interface{})
+			owner := oArray[0].(JsonObject)
 			if res := getRawK8sResource(
 				ctx,
 				owner["kind"].(string),
@@ -77,11 +77,11 @@ func getRawOwner(
 	return val
 }
 
-func getOwner(ctx context.Context, val map[string]interface{}) resource {
+func getOwner(ctx context.Context, val JsonObject) resource {
 	return mapToResource(ctx, getRawOwner(ctx, val))
 }
 
-func getRootOwner(ctx context.Context, val map[string]interface{}) resource {
+func getRootOwner(ctx context.Context, val JsonObject) resource {
 	result := getRawOwner(ctx, val)
 
 	if getUid(result) == getUid(val) {
@@ -91,11 +91,11 @@ func getRootOwner(ctx context.Context, val map[string]interface{}) resource {
 	return getRootOwner(ctx, getRawOwner(ctx, result))
 }
 
-func hasMatchingOwner(jsonObj map[string]interface{}, name, kind string) bool {
+func hasMatchingOwner(jsonObj JsonObject, name, kind string) bool {
 	if orefs := getMetadataField(jsonObj, "ownerReferences"); orefs != nil {
-		oArray := orefs.([]interface{})
+		oArray := orefs.(JsonArray)
 		for _, oref := range oArray {
-			owner := oref.(map[string]interface{})
+			owner := oref.(JsonObject)
 			if owner["name"] == name && owner["kind"] == kind {
 				return true
 			}

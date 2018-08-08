@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	//	"fmt"
+	"sort"
 )
 
 // Kubernetes metadata
@@ -25,12 +26,12 @@ type metadata struct {
 	GenerateName      *string
 	Generation        *int32
 	Labels            *[]label
-	Name              string
-	Namespace         string
+	Name              *string
+	Namespace         *string
 	OwnerReferences   *[]resource
-	ResourceVersion   string
-	SelfLink          string
-	Uid               string
+	ResourceVersion   *string
+	SelfLink          *string
+	Uid               *string
 }
 
 type metadataResolver struct {
@@ -40,7 +41,7 @@ type metadataResolver struct {
 
 // Translate unmarshalled json into a metadata object
 func mapToMetadata(
-	ctx context.Context, ns string, jsonObj map[string]interface{}) metadata {
+	ctx context.Context, ns string, jsonObj JsonObject) metadata {
 	var m metadata
 	var orefs []resource
 	if ct, ok := jsonObj["creationTimestamp"].(string); ok {
@@ -49,9 +50,9 @@ func mapToMetadata(
 		m.CreationTimestamp = nil
 	}
 	if gn, ok := jsonObj["generateName"].(string); ok {
-		m.CreationTimestamp = &gn
+		m.GenerateName = &gn
 	} else {
-		m.CreationTimestamp = nil
+		m.GenerateName = nil
 	}
 	if genVal := jsonObj["generation"]; genVal != nil {
 		if num, ok := genVal.(float64); ok {
@@ -61,17 +62,18 @@ func mapToMetadata(
 			m.Generation = (genVal.(*int32))
 		}
 	}
+	jg := jgetter(jsonObj)
 	m.Labels = mapToLabels(mapItem(jsonObj, "labels"))
-	m.Name = jsonObj["name"].(string)
-	m.Namespace = jsonObj["namespace"].(string)
-	m.ResourceVersion = jsonObj["resourceVersion"].(string)
-	m.SelfLink = jsonObj["selfLink"].(string)
-	m.Uid = jsonObj["uid"].(string)
+	m.Name = jg.stringRefItemOr("name", nil)
+	m.Namespace = jg.stringRefItemOr("namespace", nil)
+	m.ResourceVersion = jg.stringRefItemOr("resourceVersion", nil)
+	m.SelfLink = jg.stringRefItemOr("selfLink", nil)
+	m.Uid = jg.stringRefItemOr("uid", nil)
 
 	// Similar to getOwner
 	if orArray := jsonObj["ownerReferences"]; orArray != nil {
-		for _, oref := range orArray.([]interface{}) {
-			ormap := oref.(map[string]interface{})
+		for _, oref := range orArray.(JsonArray) {
+			ormap := oref.(JsonObject)
 			orefs = append(
 				orefs,
 				getK8sResource(
@@ -87,52 +89,57 @@ func mapToMetadata(
 }
 
 // Metadata methods
-func (r *metadataResolver) CreationTimestamp() *string {
+func (r metadataResolver) CreationTimestamp() *string {
 	return r.m.CreationTimestamp
 }
 
-func (r *metadataResolver) GenerateName() *string {
+func (r metadataResolver) GenerateName() *string {
 	return r.m.GenerateName
 }
 
-func (r *metadataResolver) Generation() *int32 {
+func (r metadataResolver) Generation() *int32 {
 	return r.m.Generation
 }
 
-func (r *metadataResolver) Labels() []*labelResolver {
+func (r metadataResolver) Labels() []*labelResolver {
 	var labelResolvers []*labelResolver
 	for _, label := range *r.m.Labels {
 		lab := label
 		labelResolvers = append(labelResolvers, &labelResolver{r.ctx, &lab})
 	}
+	sort.Slice(
+		labelResolvers,
+		func(i, j int) bool {
+			return labelResolvers[i].Name() < labelResolvers[j].Name()
+		})
 	return labelResolvers
 }
 
-func (r *metadataResolver) Name() string {
+func (r metadataResolver) Name() *string {
 	return r.m.Name
 }
 
-func (r *metadataResolver) Namespace() string {
+func (r metadataResolver) Namespace() *string {
 	return r.m.Namespace
 }
 
-func (r *metadataResolver) OwnerReferences() []*resourceResolver {
+func (r metadataResolver) OwnerReferences() *[]*resourceResolver {
 	var ownerResolvers []*resourceResolver
 	for _, owner := range *r.m.OwnerReferences {
 		own := owner
 		ownerResolvers = append(ownerResolvers, &resourceResolver{r.ctx, own})
 	}
-	return ownerResolvers
+	return &ownerResolvers
 }
 
-func (r *metadataResolver) ResourceVersion() string {
+func (r metadataResolver) ResourceVersion() *string {
 	return r.m.ResourceVersion
 }
 
-func (r *metadataResolver) SelfLink() string {
+func (r metadataResolver) SelfLink() *string {
 	return r.m.SelfLink
 }
 
-func (r *metadataResolver) Uid() string {
+func (r metadataResolver) Uid() *string {
 	return r.m.Uid
 }

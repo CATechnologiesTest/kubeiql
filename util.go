@@ -21,11 +21,19 @@ import (
 
 // Utility methods for getting data out of nested maps
 
-func mapItem(obj map[string]interface{}, item string) map[string]interface{} {
-	return obj[item].(map[string]interface{})
+func mapItem(obj JsonObject, item string) JsonObject {
+	return obj[item].(JsonObject)
 }
 
-func getKind(resourceMap map[string]interface{}) string {
+func mapItemRef(obj JsonObject, item string) *JsonObject {
+	if mitem, ok := obj[item].(JsonObject); ok {
+		return &mitem
+	}
+
+	return nil
+}
+
+func getKind(resourceMap JsonObject) string {
 	kind := resourceMap["kind"]
 	if kindstr, ok := kind.(string); ok {
 		return kindstr
@@ -35,7 +43,7 @@ func getKind(resourceMap map[string]interface{}) string {
 		fmt.Sprintf("Invalid Kubernetes resource: %v", resourceMap)))
 }
 
-func getNamespace(resourceMap map[string]interface{}) string {
+func getNamespace(resourceMap JsonObject) string {
 	namespace := getMetadataField(resourceMap, "namespace")
 	if nsstr, ok := namespace.(string); ok {
 		return nsstr
@@ -45,7 +53,7 @@ func getNamespace(resourceMap map[string]interface{}) string {
 		fmt.Sprintf("Invalid Kubernetes resource: %v", resourceMap)))
 }
 
-func getName(resourceMap map[string]interface{}) string {
+func getName(resourceMap JsonObject) string {
 	name := getMetadataField(resourceMap, "name")
 	if nsstr, ok := name.(string); ok {
 		return nsstr
@@ -55,7 +63,7 @@ func getName(resourceMap map[string]interface{}) string {
 		fmt.Sprintf("Invalid Kubernetes resource: %v", resourceMap)))
 }
 
-func getUid(resourceMap map[string]interface{}) string {
+func getUid(resourceMap JsonObject) string {
 	uid := getMetadataField(resourceMap, "uid")
 	if uidstr, ok := uid.(string); ok {
 		return uidstr
@@ -66,21 +74,58 @@ func getUid(resourceMap map[string]interface{}) string {
 }
 
 func getMetadataField(
-	resourceMap map[string]interface{},
+	resourceMap JsonObject,
 	field string) interface{} {
 	if meta, ok := resourceMap["metadata"]; ok {
-		if mmap, ok := meta.(map[string]interface{}); ok {
+		if mmap, ok := meta.(JsonObject); ok {
 			if val, ok := mmap[field]; ok {
 				return val
 			}
 		}
 	}
-
 	return nil
 }
 
+func toStringArray(sa JsonArray) []string {
+	strs := make([]string, len(sa))
+	for idx, val := range sa {
+		strs[idx] = val.(string)
+	}
+	return strs
+}
+
+func toStringArrayRef(sa *JsonArray) *[]string {
+	if sa == nil {
+		return nil
+	}
+	strs := make([]string, len(*sa))
+	for idx, val := range *sa {
+		strs[idx] = val.(string)
+	}
+	return &strs
+}
+
+func toIntArrayRef(ia *JsonArray) *[]int32 {
+	if ia == nil {
+		return nil
+	}
+	ints := make([]int32, len(*ia))
+	for idx, val := range *ia {
+		ints[idx] = toGQLInt(val)
+	}
+	return &ints
+}
+
+func toGQLInt(val interface{}) int32 {
+	if num, ok := val.(float64); ok {
+		return int32(num)
+	} else {
+		return val.(int32)
+	}
+}
+
 type jsonGetter struct {
-	jsonObj map[string]interface{}
+	jsonObj JsonObject
 }
 
 func (jg jsonGetter) boolItem(field string) bool {
@@ -88,7 +133,7 @@ func (jg jsonGetter) boolItem(field string) bool {
 }
 
 func (jg jsonGetter) intItem(field string) int32 {
-	return jg.jsonObj[field].(int32)
+	return toGQLInt(jg.jsonObj[field])
 }
 
 func (jg jsonGetter) stringItem(field string) string {
@@ -107,7 +152,14 @@ func (jg jsonGetter) boolItemOr(field string, defVal bool) bool {
 	if val := jg.jsonObj[field]; val != nil {
 		return val.(bool)
 	}
+	return defVal
+}
 
+func (jg jsonGetter) intRefItemOr(field string, defVal *int32) *int32 {
+	if val := jg.jsonObj[field]; val != nil {
+		intval := toGQLInt(val)
+		return &intval
+	}
 	return defVal
 }
 
@@ -119,7 +171,6 @@ func (jg jsonGetter) intItemOr(field string, defVal int32) int32 {
 			return val.(int32)
 		}
 	}
-
 	return defVal
 }
 
@@ -128,7 +179,6 @@ func (jg jsonGetter) stringRefItemOr(field string, defVal *string) *string {
 		strVal := val.(string)
 		return &strVal
 	}
-
 	return defVal
 }
 
@@ -136,28 +186,29 @@ func (jg jsonGetter) stringItemOr(field string, defVal string) string {
 	if val := jg.jsonObj[field]; val != nil {
 		return val.(string)
 	}
-
 	return defVal
 }
 
 func (jg jsonGetter) arrayItemOr(field string, defVal *JsonArray) *JsonArray {
-	if val, ok := jg.jsonObj[field].([]interface{}); ok {
+	if val, ok := jg.jsonObj[field].(JsonArray); ok {
 		arrVal := JsonArray(val)
 		return &arrVal
 	}
-
 	return defVal
 }
 
 func (jg jsonGetter) objItemOr(field string, defVal *JsonObject) *JsonObject {
-	if val, ok := jg.jsonObj[field].(map[string]interface{}); ok {
+	if val, ok := jg.jsonObj[field].(JsonObject); ok {
 		objVal := JsonObject(val)
 		return &objVal
 	}
-
 	return defVal
 }
 
-func jgetter(jsonObj map[string]interface{}) jsonGetter {
-	return jsonGetter{jsonObj}
+func jgetter(jsonObj interface{}) jsonGetter {
+	if mval, ok := jsonObj.(JsonObject); ok {
+		return jsonGetter{mval}
+	}
+	panic(errors.New(
+		fmt.Sprintf("Invalid Kubernetes object: %v", jsonObj)))
 }
