@@ -96,7 +96,7 @@ type labelSelectorRequirementResolver struct {
 
 type rollingUpdateDeploymentResolver struct {
 	ctx context.Context
-	r   *rollingUpdateDeployment
+	r   rollingUpdateDeployment
 }
 
 type podTemplateSpecResolver struct {
@@ -191,22 +191,40 @@ func mapToStrategy(strat *JsonObject) *deploymentStrategy {
 		return &deploymentStrategy{nil, sType}
 	}
 
-	rudg := jgetter(*updateItem)
-	is := rudg.intRefItemOr("maxSurge", nil)
-	iu := rudg.intRefItemOr("maxUnavailable", nil)
-	ms := rudg.stringRefItemOr("maxSurgeString", nil)
-	mu := rudg.stringRefItemOr("maxUnavailableString", nil)
+	sval, spresent := (*updateItem)["maxSurge"]
+	uval, upresent := (*updateItem)["maxUnavailable"]
+	var ss, su string
+	var is, iu int32
+	var ssptr *string = nil
+	var suptr *string = nil
+	var isptr *int32 = nil
+	var iuptr *int32 = nil
 	defval := "25%"
 
-	if is == nil && ms == nil {
-		ms = &defval
+	if !spresent {
+		ss = defval
+		ssptr = &ss
+	} else if ssval, ok := sval.(string); ok {
+		ss = ssval
+		ssptr = &ss
+	} else {
+		is = toGQLInt(sval)
+		isptr = &is
 	}
 
-	if iu == nil && mu == nil {
-		mu = &defval
+	if !upresent {
+		su = defval
+		suptr = &su
+	} else if suval, ok := uval.(string); ok {
+		su = suval
+		suptr = &su
+	} else {
+		iu = toGQLInt(uval)
+		iuptr = &iu
 	}
 
-	return &deploymentStrategy{&rollingUpdateDeployment{is, ms, iu, mu},
+	return &deploymentStrategy{
+		&rollingUpdateDeployment{isptr, ssptr, iuptr, suptr},
 		sType}
 }
 
@@ -357,7 +375,10 @@ func (r *deploymentResolver) ReplicaSets() []*replicaSetResolver {
 }
 
 func (r deploymentStrategyResolver) RollingUpdate() *rollingUpdateDeploymentResolver {
-	return &rollingUpdateDeploymentResolver{r.ctx, r.d.RollingUpdate}
+	if r.d.RollingUpdate == nil {
+		return nil
+	}
+	return &rollingUpdateDeploymentResolver{r.ctx, *r.d.RollingUpdate}
 }
 
 func (r deploymentStrategyResolver) Type() *string {

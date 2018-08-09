@@ -109,6 +109,40 @@ func TestPods(t *testing.T) {
                 }
               }
             }
+            replicaSets {
+              metadata {
+                name
+              }
+              pods {
+                metadata {
+                  name
+                  namespace
+                  labels {
+                    name
+                    value
+                  }
+                }
+                spec {
+                  dnsPolicy
+                  nodeName
+                  restartPolicy
+                  schedulerName
+                  serviceAccountName
+                  terminationGracePeriodSeconds
+                  tolerations {
+                    effect
+                    key
+                    operator
+                    tolerationSeconds
+                  }
+                  volumes {
+                    name
+                    persistentVolumeClaim { claimName readOnly }
+                    secret { defaultMode secretName }
+                  }
+                }
+              }
+            }
          }}`,
 		`{"allDeployments": [
             {
@@ -173,8 +207,75 @@ func TestPods(t *testing.T) {
                     ]
                   }
                 }
-              }
+              },
+              "replicaSets": [
+                {
+                  "metadata": {
+                    "name": "clunky-sabertooth-joomla-5d4ddc985d"
+                  },
+                  "pods": [
+                    {
+                      "metadata": {
+                        "name": "clunky-sabertooth-joomla-5d4ddc985d-fpddz",
+                        "namespace": "default",
+                        "labels": [
+                          {"name": "app",  "value": "clunky-sabertooth-joomla"},
+                          {"name": "pod-template-hash", "value": "1808875418"}
+                        ]
+                      },
+                      "spec": {
+                        "dnsPolicy": "ClusterFirst",
+                        "nodeName": "minikube",
+                        "restartPolicy": "Always",
+                        "schedulerName": "default-scheduler",
+                        "serviceAccountName": "default",
+                        "terminationGracePeriodSeconds": 30,
+                        "tolerations": [
+                          {
+                            "effect": "NoExecute",
+                            "key": "node.kubernetes.io/not-ready",
+                            "operator": "Exists",
+                            "tolerationSeconds": 300
+                          },
+                          {
+                            "effect": "NoExecute",
+                            "key": "node.kubernetes.io/unreachable",
+                            "operator": "Exists",
+                            "tolerationSeconds": 300
+                          }
+                        ],
+                        "volumes": [
+                          {
+                            "name": "joomla-data",
+                            "persistentVolumeClaim": {
+                              "claimName": "clunky-sabertooth-joomla-joomla",
+                              "readOnly": false
+                            },
+                            "secret": null
+                          },
+                          {
+                            "name": "apache-data",
+                            "persistentVolumeClaim": {
+                              "claimName": "clunky-sabertooth-joomla-apache",
+                              "readOnly": false
+                            },
+                            "secret": null
+                          },
+                          {
+                            "name": "default-token-l6lb2",
+                            "persistentVolumeClaim": null,
+                            "secret": {
+                              "defaultMode": 420,
+                              "secretName": "default-token-l6lb2"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
             }
-           ]
-         }`)
+          ]
+        }`)
 }
