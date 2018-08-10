@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	//	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -66,6 +67,12 @@ func getReplicaSetPods(ctx context.Context, r replicaSet) *[]pod {
 		pr := p.(*podResolver)
 		results[idx] = pr.p
 	}
+
+	sort.Slice(
+		results,
+		func(i, j int) bool {
+			return *results[i].Metadata.Name < *results[j].Metadata.Name
+		})
 
 	return &results
 }

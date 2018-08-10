@@ -71,7 +71,7 @@ func lookUpMap(
 	ctx context.Context,
 	kind, namespace, name string) JsonObject {
 	cache := getCache(ctx)
-	key := rawCacheKey(kind, namespace, name)
+	key := cacheKey(kind, namespace, name)
 	cachedVal := (*cache)[key]
 	var result JsonObject
 	if cachedVal == nil {
@@ -118,8 +118,13 @@ func getAllK8sObjsOfKind(
 	kind string,
 	test func(JsonObject) bool) []resource {
 	cache := getCache(ctx)
-	results := (*cache)[kind]
-	if results == nil {
+	var cachedJsonObjs []JsonObject
+	var results []resource
+
+	objs := (*cache)[kind]
+	if objs != nil {
+		cachedJsonObjs = objs.([]JsonObject)
+	} else {
 		if isTest() {
 			return make([]resource, 0)
 		}
@@ -139,35 +144,41 @@ func getAllK8sObjsOfKind(
 		if err := cmd.Wait(); err != nil {
 			log.Fatal(err)
 		}
-		var resources []resource
 		arr := (fromJson(bytes).(JsonObject))["items"].(JsonArray)
-		for _, res := range arr {
-			val := mapToResource(ctx, res.(JsonObject))
-			(*cache)[cacheKey(kind,
-				*val.Metadata().Namespace(), *val.Metadata().Name())] = val
-			if test(res.(JsonObject)) {
-				resources = append(resources, val)
-			}
+		for _, val := range arr {
+			cachedJsonObjs = append(cachedJsonObjs, val.(JsonObject))
 		}
-		results = resources
 	}
+	for _, res := range cachedJsonObjs {
+		val := mapToResource(ctx, res)
+		if test(res) {
+			results = append(results, val)
+		}
+	}
+
 	if results == nil {
 		results = make([]resource, 0)
 	}
-	if (*cache)[kind] == nil {
-		(*cache)[kind] = results
+	if (*cache)[kind] == nil && len(cachedJsonObjs) > 0 {
+		(*cache)[kind] = cachedJsonObjs
 	}
-	return results.([]resource)
+	return results
 }
 
 // Get all resource instances of a specific kind in a specific namespace
+
 func getAllK8sObjsOfKindInNamespace(
 	ctx context.Context,
 	kind, ns string,
 	test func(JsonObject) bool) []resource {
 	cache := getCache(ctx)
-	results := (*cache)[kind]
-	if results == nil {
+	var cachedJsonObjs []JsonObject
+	var results []resource
+
+	objs := (*cache)[kind]
+	if objs != nil {
+		cachedJsonObjs = objs.([]JsonObject)
+	} else {
 		if isTest() {
 			return make([]resource, 0)
 		}
@@ -187,23 +198,25 @@ func getAllK8sObjsOfKindInNamespace(
 		if err := cmd.Wait(); err != nil {
 			log.Fatal(err)
 		}
-		var resources []resource
 		arr := (fromJson(bytes).(JsonObject))["items"].(JsonArray)
-		for _, res := range arr {
-			val := mapToResource(ctx, res.(JsonObject))
-			if test(res.(JsonObject)) {
-				resources = append(resources, val)
-			}
+		for _, val := range arr {
+			cachedJsonObjs = append(cachedJsonObjs, val.(JsonObject))
 		}
-		results = resources
 	}
+	for _, res := range cachedJsonObjs {
+		val := mapToResource(ctx, res)
+		if test(res) {
+			results = append(results, val)
+		}
+	}
+
 	if results == nil {
 		results = make([]resource, 0)
 	}
-	if (*cache)[kind] == nil {
-		(*cache)[kind] = results
+	if (*cache)[kind] == nil && len(cachedJsonObjs) > 0 {
+		(*cache)[kind] = cachedJsonObjs
 	}
-	return results.([]resource)
+	return results
 }
 
 func cacheKey(kind, namespace, name string) string {

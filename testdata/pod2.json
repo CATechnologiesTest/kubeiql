@@ -1,0 +1,412 @@
+{
+    "apiVersion": "v1",
+    "kind": "Pod",
+    "metadata": {
+        "annotations": {
+            "kubernetes.io/psp": "ibm-privileged-psp",
+            "scheduler.alpha.kubernetes.io/critical-pod": ""
+        },
+        "creationTimestamp": "2018-07-26T00:58:25Z",
+        "generateName": "calico-node-",
+        "labels": {
+            "controller-revision-hash": "3909226423",
+            "k8s-app": "calico-node",
+            "pod-template-generation": "1"
+        },
+        "name": "calico-node-ddxfj",
+        "namespace": "kube-system",
+        "ownerReferences": [
+            {
+                "apiVersion": "extensions/v1beta1",
+                "blockOwnerDeletion": true,
+                "controller": true,
+                "kind": "DaemonSet",
+                "name": "calico-node",
+                "uid": "004e17fc-906f-11e8-bb3f-c29cc5a41b2a"
+            }
+        ],
+        "resourceVersion": "47028",
+        "selfLink": "/api/v1/namespaces/kube-system/pods/calico-node-ddxfj",
+        "uid": "00531b05-906f-11e8-bb3f-c29cc5a41b2a"
+    },
+    "spec": {
+        "affinity": {
+            "nodeAffinity": {
+                "requiredDuringSchedulingIgnoredDuringExecution": {
+                    "nodeSelectorTerms": [
+                        {
+                            "matchExpressions": [
+                                {
+                                    "key": "ibmcloud.io/systemd-calico-node",
+                                    "operator": "DoesNotExist"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        "containers": [
+            {
+                "env": [
+                    {
+                        "name": "ETCD_ENDPOINTS",
+                        "valueFrom": {
+                            "configMapKeyRef": {
+                                "key": "etcd_endpoints",
+                                "name": "calico-config"
+                            }
+                        }
+                    },
+                    {
+                        "name": "CALICO_NETWORKING_BACKEND",
+                        "valueFrom": {
+                            "configMapKeyRef": {
+                                "key": "calico_backend",
+                                "name": "calico-config"
+                            }
+                        }
+                    },
+                    {
+                        "name": "CLUSTER_TYPE",
+                        "value": "k8s,bgp"
+                    },
+                    {
+                        "name": "CALICO_DISABLE_FILE_LOGGING",
+                        "value": "true"
+                    },
+                    {
+                        "name": "FELIX_DEFAULTENDPOINTTOHOSTACTION",
+                        "value": "ACCEPT"
+                    },
+                    {
+                        "name": "FELIX_IPTABLESREFRESHINTERVAL",
+                        "value": "60"
+                    },
+                    {
+                        "name": "FELIX_PROMETHEUSMETRICSENABLED",
+                        "value": "true"
+                    },
+                    {
+                        "name": "FELIX_PROMETHEUSMETRICSPORT",
+                        "value": "9091"
+                    },
+                    {
+                        "name": "IP",
+                        "value": "autodetect"
+                    },
+                    {
+                        "name": "IP_AUTODETECTION_METHOD",
+                        "value": "interface=(^bond0$|^eth0$|^ens6$)"
+                    },
+                    {
+                        "name": "CALICO_IPV4POOL_CIDR",
+                        "value": "172.30.0.0/16"
+                    },
+                    {
+                        "name": "CALICO_IPV4POOL_IPIP",
+                        "value": "cross-subnet"
+                    },
+                    {
+                        "name": "CALICO_K8S_NODE_REF",
+                        "valueFrom": {
+                            "fieldRef": {
+                                "apiVersion": "v1",
+                                "fieldPath": "spec.nodeName"
+                            }
+                        }
+                    },
+                    {
+                        "name": "FELIX_IPV6SUPPORT",
+                        "value": "false"
+                    },
+                    {
+                        "name": "FELIX_LOGSEVERITYSCREEN",
+                        "value": "info"
+                    },
+                    {
+                        "name": "FELIX_IPINIPMTU",
+                        "value": "1480"
+                    },
+                    {
+                        "name": "ETCD_CA_CERT_FILE",
+                        "valueFrom": {
+                            "configMapKeyRef": {
+                                "key": "etcd_ca",
+                                "name": "calico-config"
+                            }
+                        }
+                    },
+                    {
+                        "name": "ETCD_KEY_FILE",
+                        "valueFrom": {
+                            "configMapKeyRef": {
+                                "key": "etcd_key",
+                                "name": "calico-config"
+                            }
+                        }
+                    },
+                    {
+                        "name": "ETCD_CERT_FILE",
+                        "valueFrom": {
+                            "configMapKeyRef": {
+                                "key": "etcd_cert",
+                                "name": "calico-config"
+                            }
+                        }
+                    },
+                    {
+                        "name": "FELIX_HEALTHENABLED",
+                        "value": "true"
+                    }
+                ],
+                "image": "registry.ng.bluemix.net/armada-master/node:v2.6.5",
+                "imagePullPolicy": "IfNotPresent",
+                "livenessProbe": {
+                    "failureThreshold": 6,
+                    "httpGet": {
+                        "path": "/liveness",
+                        "port": 9099,
+                        "scheme": "HTTP"
+                    },
+                    "initialDelaySeconds": 10,
+                    "periodSeconds": 10,
+                    "successThreshold": 1,
+                    "timeoutSeconds": 1
+                },
+                "name": "calico-node",
+                "readinessProbe": {
+                    "failureThreshold": 3,
+                    "httpGet": {
+                        "path": "/readiness",
+                        "port": 9099,
+                        "scheme": "HTTP"
+                    },
+                    "periodSeconds": 10,
+                    "successThreshold": 1,
+                    "timeoutSeconds": 1
+                },
+                "resources": {
+                    "requests": {
+                        "cpu": "250m"
+                    }
+                },
+                "securityContext": {
+                    "privileged": true
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                    {
+                        "mountPath": "/lib/modules",
+                        "name": "lib-modules",
+                        "readOnly": true
+                    },
+                    {
+                        "mountPath": "/var/run/calico",
+                        "name": "var-run-calico"
+                    },
+                    {
+                        "mountPath": "/calico-secrets",
+                        "name": "etcd-certs"
+                    },
+                    {
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "name": "calico-node-token-rczbq",
+                        "readOnly": true
+                    }
+                ]
+            },
+            {
+                "command": [
+                    "/install-cni.sh"
+                ],
+                "env": [
+                    {
+                        "name": "ETCD_ENDPOINTS",
+                        "valueFrom": {
+                            "configMapKeyRef": {
+                                "key": "etcd_endpoints",
+                                "name": "calico-config"
+                            }
+                        }
+                    },
+                    {
+                        "name": "CNI_NETWORK_CONFIG",
+                        "valueFrom": {
+                            "configMapKeyRef": {
+                                "key": "cni_network_config",
+                                "name": "calico-config"
+                            }
+                        }
+                    }
+                ],
+                "image": "registry.ng.bluemix.net/armada-master/cni:v1.11.2",
+                "imagePullPolicy": "IfNotPresent",
+                "name": "install-cni",
+                "resources": {},
+                "terminationMessagePath": "/dev/termination-log",
+                "terminationMessagePolicy": "File",
+                "volumeMounts": [
+                    {
+                        "mountPath": "/host/opt/cni/bin",
+                        "name": "cni-bin-dir"
+                    },
+                    {
+                        "mountPath": "/host/etc/cni/net.d",
+                        "name": "cni-net-dir"
+                    },
+                    {
+                        "mountPath": "/calico-secrets",
+                        "name": "etcd-certs"
+                    },
+                    {
+                        "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount",
+                        "name": "calico-node-token-rczbq",
+                        "readOnly": true
+                    }
+                ]
+            }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "hostNetwork": true,
+        "imagePullSecrets": [
+            {
+                "name": "bluemix-default-secret"
+            }
+        ],
+        "nodeName": "10.76.193.41",
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {},
+        "serviceAccount": "calico-node",
+        "serviceAccountName": "calico-node",
+        "terminationGracePeriodSeconds": 0,
+        "tolerations": [
+            {
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/not-ready",
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoExecute",
+                "key": "node.kubernetes.io/unreachable",
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoSchedule",
+                "key": "node.kubernetes.io/disk-pressure",
+                "operator": "Exists"
+            },
+            {
+                "effect": "NoSchedule",
+                "key": "node.kubernetes.io/memory-pressure",
+                "operator": "Exists"
+            }
+        ],
+        "volumes": [
+            {
+                "hostPath": {
+                    "path": "/lib/modules",
+                    "type": ""
+                },
+                "name": "lib-modules"
+            },
+            {
+                "hostPath": {
+                    "path": "/var/run/calico",
+                    "type": ""
+                },
+                "name": "var-run-calico"
+            },
+            {
+                "hostPath": {
+                    "path": "/opt/cni/bin",
+                    "type": ""
+                },
+                "name": "cni-bin-dir"
+            },
+            {
+                "hostPath": {
+                    "path": "/etc/cni/net.d",
+                    "type": ""
+                },
+                "name": "cni-net-dir"
+            },
+            {
+                "name": "etcd-certs",
+                "secret": {
+                    "defaultMode": 420,
+                    "secretName": "calico-etcd-secrets"
+                }
+            },
+            {
+                "name": "calico-node-token-rczbq",
+                "secret": {
+                    "defaultMode": 420,
+                    "secretName": "calico-node-token-rczbq"
+                }
+            }
+        ]
+    },
+    "status": {
+        "conditions": [
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2018-07-26T00:58:25Z",
+                "status": "True",
+                "type": "Initialized"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2018-07-26T00:58:45Z",
+                "status": "True",
+                "type": "Ready"
+            },
+            {
+                "lastProbeTime": null,
+                "lastTransitionTime": "2018-07-26T00:58:38Z",
+                "status": "True",
+                "type": "PodScheduled"
+            }
+        ],
+        "containerStatuses": [
+            {
+                "containerID": "docker://a609bcf2011800564e451b40ab915c21a645774e996acd054aaba6e69299be14",
+                "image": "registry.ng.bluemix.net/armada-master/node:v2.6.5",
+                "imageID": "docker-pullable://registry.ng.bluemix.net/armada-master/node@sha256:d79a25b3ef899332f9de73536634c9a3ce3fa12b3e77e504cff1e2d2a8d536e6",
+                "lastState": {},
+                "name": "calico-node",
+                "ready": true,
+                "restartCount": 0,
+                "state": {
+                    "running": {
+                        "startedAt": "2018-07-26T00:58:33Z"
+                    }
+                }
+            },
+            {
+                "containerID": "docker://679df731797b5f3538ac083829da595bd0ffe38217104e676058ccb35586de52",
+                "image": "registry.ng.bluemix.net/armada-master/cni:v1.11.2",
+                "imageID": "docker-pullable://registry.ng.bluemix.net/armada-master/cni@sha256:df0606795dc43a5f9f0823db26661a722107b93cfc88c1e20ba80bec45634023",
+                "lastState": {},
+                "name": "install-cni",
+                "ready": true,
+                "restartCount": 0,
+                "state": {
+                    "running": {
+                        "startedAt": "2018-07-26T00:58:37Z"
+                    }
+                }
+            }
+        ],
+        "hostIP": "10.76.193.41",
+        "phase": "Running",
+        "podIP": "10.76.193.41",
+        "qosClass": "Burstable",
+        "startTime": "2018-07-26T00:58:25Z"
+    }
+}

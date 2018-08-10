@@ -40,7 +40,9 @@ func init() {
 	for _, fname := range []string{
 		"deployment.json",
 		"replicaset.json",
-		"pod1.json"} {
+		"daemonset.json",
+		"pod1.json",
+		"pod2.json"} {
 		addToCache(&cache, "testdata/"+fname)
 	}
 }
@@ -54,228 +56,312 @@ func addToCache(cacheref *map[string]interface{}, fname string) {
 	kind := data["kind"].(string)
 	ns := getNamespace(data)
 	name := getName(data)
-	res := mapToResource(*getTestContext(), data)
-	(*cacheref)[rawCacheKey(kind, ns, name)] = data
-	(*cacheref)[cacheKey(kind, ns, name)] = res
-	(*cacheref)[kind] = []resource{res}
+	(*cacheref)[cacheKey(kind, ns, name)] = data
+	existing := (*cacheref)[kind]
+	if existing == nil {
+		(*cacheref)[kind] = []JsonObject{data}
+	} else {
+		(*cacheref)[kind] = append(existing.([]JsonObject), data)
+	}
 }
 
 func TestPods(t *testing.T) {
 	simpletest(
 		t,
-		`{allDeployments() {
-            metadata {
-              creationTimestamp
-              generation
-              labels { name value }
-            }
-            spec {
-              minReadySeconds
-              paused
-              progressDeadlineSeconds
-              replicas
-              revisionHistoryLimit
-              selector {
-                matchLabels { name value }
-                matchExpressions {
-                  key
-                  operator
-                  values
-                }
-              }
-              strategy {
-                type
-                rollingUpdate {
-                  maxSurgeInt
-                  maxSurgeString
-                  maxUnavailableInt
-                  maxUnavailableString
-                }
-              }
-              template {
-                metadata {
-                  creationTimestamp
-                  labels { name value }
-                },
-                spec {
-                  dnsPolicy
-                  restartPolicy
-                  schedulerName
-                  terminationGracePeriodSeconds
-                  volumes {
-                    name
-                    persistentVolumeClaim { claimName readOnly }
-                  }
-                }
-              }
-            }
-            replicaSets {
-              metadata {
-                name
-              }
-              pods {
-                metadata {
-                  name
-                  namespace
-                  labels {
-                    name
-                    value
-                  }
-                }
-                spec {
-                  dnsPolicy
-                  nodeName
-                  restartPolicy
-                  schedulerName
-                  serviceAccountName
-                  terminationGracePeriodSeconds
-                  tolerations {
-                    effect
-                    key
-                    operator
-                    tolerationSeconds
-                  }
-                  volumes {
-                    name
-                    persistentVolumeClaim { claimName readOnly }
-                    secret { defaultMode secretName }
-                  }
-                }
-              }
-            }
-         }}`,
-		`{"allDeployments": [
+		`{
+           allDeployments() {
+             metadata {
+               creationTimestamp
+               generation
+               labels { name value }
+             }
+             spec {
+               minReadySeconds
+               paused
+               progressDeadlineSeconds
+               replicas
+               revisionHistoryLimit
+               selector {
+                 matchLabels { name value }
+                 matchExpressions {
+                   key
+                   operator
+                   values
+                 }
+               }
+               strategy {
+                 type
+                 rollingUpdate {
+                   maxSurgeInt
+                   maxSurgeString
+                   maxUnavailableInt
+                   maxUnavailableString
+                 }
+               }
+               template {
+                 metadata {
+                   creationTimestamp
+                   labels { name value }
+                 },
+                 spec {
+                   dnsPolicy
+                   restartPolicy
+                   schedulerName
+                   terminationGracePeriodSeconds
+                   volumes {
+                     name
+                     persistentVolumeClaim { claimName readOnly }
+                   }
+                 }
+               }
+             }
+             replicaSets {
+               metadata {
+                 name
+               }
+               pods {
+                 metadata {
+                   name
+                   namespace
+                   labels {
+                     name
+                     value
+                   }
+                 }
+                 spec {
+                   dnsPolicy
+                   nodeName
+                   restartPolicy
+                   schedulerName
+                   serviceAccountName
+                   terminationGracePeriodSeconds
+                   tolerations {
+                     effect
+                     key
+                     operator
+                     tolerationSeconds
+                   }
+                   volumes {
+                     name
+                     persistentVolumeClaim { claimName readOnly }
+                     secret { defaultMode secretName }
+                   }
+                 }
+               }
+             }
+          }}`,
+		`{
+           "allDeployments": [
             {
-              "metadata": {
-                "creationTimestamp": "2018-07-02T14:53:53Z",
-                "generation": 1,
-                "labels": [
-                  {"name": "app", "value": "clunky-sabertooth-joomla"},
-                  {"name": "chart", "value": "joomla-2.0.2"},
-                  {"name": "heritage", "value": "Tiller"},
-                  {"name": "release", "value": "clunky-sabertooth"}
-                 ]
-              },
-              "spec": {
-                "minReadySeconds": 0,
-                "paused": false,
-                "progressDeadlineSeconds": 600,
-                "replicas": 1,
-                "revisionHistoryLimit": 10,
-                "selector": {
-                  "matchExpressions": [],
-                  "matchLabels": [
-                    {"name": "app", "value": "clunky-sabertooth-joomla"}
+               "metadata": {
+                 "creationTimestamp": "2018-07-02T14:53:53Z",
+                 "generation": 1,
+                 "labels": [
+                   {"name": "app", "value": "clunky-sabertooth-joomla"},
+                   {"name": "chart", "value": "joomla-2.0.2"},
+                   {"name": "heritage", "value": "Tiller"},
+                   {"name": "release", "value": "clunky-sabertooth"}
                   ]
-                },
-                "strategy": {
-                  "rollingUpdate": {
-                    "maxSurgeInt": 1,
-                    "maxSurgeString": null,
-                    "maxUnavailableInt": 1,
-                    "maxUnavailableString": null
-                  },
-                  "type": "RollingUpdate"
-                },
-                "template": {
-                  "metadata": {
-                    "creationTimestamp": null,
-                    "labels": [
-                      {"name": "app", "value": "clunky-sabertooth-joomla"}
-                    ]
-                  },
-                  "spec": {
-                    "dnsPolicy": "ClusterFirst",
-                    "restartPolicy": "Always",
-                    "schedulerName": "default-scheduler",
-                    "terminationGracePeriodSeconds": 30,
-                    "volumes": [
-                      {
-                        "name": "joomla-data",
-                        "persistentVolumeClaim": {
-                          "claimName": "clunky-sabertooth-joomla-joomla",
-                          "readOnly": false
-                        }
-                      },
-                      {
-                        "name": "apache-data",
-                        "persistentVolumeClaim": {
-                          "claimName": "clunky-sabertooth-joomla-apache",
-                          "readOnly": false
-                        }
-                      }
-                    ]
-                  }
-                }
-              },
-              "replicaSets": [
-                {
-                  "metadata": {
-                    "name": "clunky-sabertooth-joomla-5d4ddc985d"
-                  },
-                  "pods": [
-                    {
-                      "metadata": {
-                        "name": "clunky-sabertooth-joomla-5d4ddc985d-fpddz",
-                        "namespace": "default",
-                        "labels": [
-                          {"name": "app",  "value": "clunky-sabertooth-joomla"},
-                          {"name": "pod-template-hash", "value": "1808875418"}
-                        ]
-                      },
-                      "spec": {
-                        "dnsPolicy": "ClusterFirst",
-                        "nodeName": "minikube",
-                        "restartPolicy": "Always",
-                        "schedulerName": "default-scheduler",
-                        "serviceAccountName": "default",
-                        "terminationGracePeriodSeconds": 30,
-                        "tolerations": [
-                          {
-                            "effect": "NoExecute",
-                            "key": "node.kubernetes.io/not-ready",
-                            "operator": "Exists",
-                            "tolerationSeconds": 300
-                          },
-                          {
-                            "effect": "NoExecute",
-                            "key": "node.kubernetes.io/unreachable",
-                            "operator": "Exists",
-                            "tolerationSeconds": 300
-                          }
-                        ],
-                        "volumes": [
-                          {
-                            "name": "joomla-data",
-                            "persistentVolumeClaim": {
-                              "claimName": "clunky-sabertooth-joomla-joomla",
-                              "readOnly": false
-                            },
-                            "secret": null
-                          },
-                          {
-                            "name": "apache-data",
-                            "persistentVolumeClaim": {
-                              "claimName": "clunky-sabertooth-joomla-apache",
-                              "readOnly": false
-                            },
-                            "secret": null
-                          },
-                          {
-                            "name": "default-token-l6lb2",
-                            "persistentVolumeClaim": null,
-                            "secret": {
-                              "defaultMode": 420,
-                              "secretName": "default-token-l6lb2"
-                            }
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
+               },
+               "spec": {
+                 "minReadySeconds": 0,
+                 "paused": false,
+                 "progressDeadlineSeconds": 600,
+                 "replicas": 1,
+                 "revisionHistoryLimit": 10,
+                 "selector": {
+                   "matchExpressions": [],
+                   "matchLabels": [
+                     {"name": "app", "value": "clunky-sabertooth-joomla"}
+                   ]
+                 },
+                 "strategy": {
+                   "rollingUpdate": {
+                     "maxSurgeInt": 1,
+                     "maxSurgeString": null,
+                     "maxUnavailableInt": 1,
+                     "maxUnavailableString": null
+                   },
+                   "type": "RollingUpdate"
+                 },
+                 "template": {
+                   "metadata": {
+                     "creationTimestamp": null,
+                     "labels": [
+                       {"name": "app", "value": "clunky-sabertooth-joomla"}
+                     ]
+                   },
+                   "spec": {
+                     "dnsPolicy": "ClusterFirst",
+                     "restartPolicy": "Always",
+                     "schedulerName": "default-scheduler",
+                     "terminationGracePeriodSeconds": 30,
+                     "volumes": [
+                       {
+                         "name": "joomla-data",
+                         "persistentVolumeClaim": {
+                           "claimName": "clunky-sabertooth-joomla-joomla",
+                           "readOnly": false
+                         }
+                       },
+                       {
+                         "name": "apache-data",
+                         "persistentVolumeClaim": {
+                           "claimName": "clunky-sabertooth-joomla-apache",
+                           "readOnly": false
+                         }
+                       }
+                     ]
+                   }
+                 }
+               },
+               "replicaSets": [
+                 {
+                   "metadata": {
+                     "name": "clunky-sabertooth-joomla-5d4ddc985d"
+                   },
+                   "pods": [
+                     {
+                       "metadata": {
+                         "name": "clunky-sabertooth-joomla-5d4ddc985d-fpddz",
+                         "namespace": "default",
+                         "labels": [
+                           {"name": "app",  "value": "clunky-sabertooth-joomla"},
+                           {"name": "pod-template-hash", "value": "1808875418"}
+                         ]
+                       },
+                       "spec": {
+                         "dnsPolicy": "ClusterFirst",
+                         "nodeName": "minikube",
+                         "restartPolicy": "Always",
+                         "schedulerName": "default-scheduler",
+                         "serviceAccountName": "default",
+                         "terminationGracePeriodSeconds": 30,
+                         "tolerations": [
+                           {
+                             "effect": "NoExecute",
+                             "key": "node.kubernetes.io/not-ready",
+                             "operator": "Exists",
+                             "tolerationSeconds": 300
+                           },
+                           {
+                             "effect": "NoExecute",
+                             "key": "node.kubernetes.io/unreachable",
+                             "operator": "Exists",
+                             "tolerationSeconds": 300
+                           }
+                         ],
+                         "volumes": [
+                           {
+                             "name": "joomla-data",
+                             "persistentVolumeClaim": {
+                               "claimName": "clunky-sabertooth-joomla-joomla",
+                               "readOnly": false
+                             },
+                             "secret": null
+                           },
+                           {
+                             "name": "apache-data",
+                             "persistentVolumeClaim": {
+                               "claimName": "clunky-sabertooth-joomla-apache",
+                               "readOnly": false
+                             },
+                             "secret": null
+                           },
+                           {
+                             "name": "default-token-l6lb2",
+                             "persistentVolumeClaim": null,
+                             "secret": {
+                               "defaultMode": 420,
+                               "secretName": "default-token-l6lb2"
+                             }
+                           }
+                         ]
+                       }
+                     }
+                   ]
+                 }
+               ]
+             }
+           ]
         }`)
+	simpletest(
+		t,
+		`{
+           podByName(namespace: "default",
+                     name: "clunky-sabertooth-joomla-5d4ddc985d-fpddz") {
+             owner { metadata { name } }
+             rootOwner { metadata { name } }
+           }
+         }`,
+		`{
+           "podByName": {
+             "owner": {
+               "metadata": { "name": "clunky-sabertooth-joomla-5d4ddc985d" }
+             },
+             "rootOwner": {
+               "metadata": { "name": "clunky-sabertooth-joomla" }
+             }
+           }
+         }`)
+	simpletest(
+		t,
+		`{
+           allReplicaSets() {
+             owner { metadata { name } }
+             rootOwner { metadata { name } }
+           }
+         }`,
+		`{
+           "allReplicaSets": [
+             {
+               "owner": {
+                 "metadata": { "name": "clunky-sabertooth-joomla" }
+               },
+               "rootOwner": {
+                 "metadata": { "name": "clunky-sabertooth-joomla" }
+               }
+             }
+           ]
+         }`)
+	simpletest(
+		t,
+		`{
+           allDaemonSets() {
+             owner { metadata { name namespace } }
+             rootOwner { metadata { name namespace } }
+             pods { metadata { name labels { name value } } }
+           }
+         }`,
+		`{
+           "allDaemonSets": [
+             {
+               "owner": {
+                 "metadata": {
+                   "name": "calico-node",
+                   "namespace": "kube-system"
+                 }
+               },
+               "rootOwner": {
+                 "metadata": {
+                   "name": "calico-node",
+                   "namespace": "kube-system"
+                 }
+               },
+               "pods": [
+                 {
+                   "metadata": {
+                     "name": "calico-node-ddxfj",
+                     "labels": [
+                       {"name": "controller-revision-hash",
+                        "value": "3909226423"},
+                       {"name": "k8s-app", "value": "calico-node"},
+                       {"name": "pod-template-generation", "value": "1"}
+                     ]
+                   }
+                 }
+               ]
+             }
+           ]
+         }`)
 }

@@ -1,0 +1,331 @@
+{
+    "apiVersion": "extensions/v1beta1",
+    "kind": "DaemonSet",
+    "metadata": {
+        "creationTimestamp": "2018-07-26T00:58:25Z",
+        "generation": 1,
+        "labels": {
+            "k8s-app": "calico-node"
+        },
+        "name": "calico-node",
+        "namespace": "kube-system",
+        "resourceVersion": "47029",
+        "selfLink": "/apis/extensions/v1beta1/namespaces/kube-system/daemonsets/calico-node",
+        "uid": "004e17fc-906f-11e8-bb3f-c29cc5a41b2a"
+    },
+    "spec": {
+        "revisionHistoryLimit": 10,
+        "selector": {
+            "matchLabels": {
+                "k8s-app": "calico-node"
+            }
+        },
+        "template": {
+            "metadata": {
+                "annotations": {
+                    "scheduler.alpha.kubernetes.io/critical-pod": ""
+                },
+                "creationTimestamp": null,
+                "labels": {
+                    "k8s-app": "calico-node"
+                }
+            },
+            "spec": {
+                "affinity": {
+                    "nodeAffinity": {
+                        "requiredDuringSchedulingIgnoredDuringExecution": {
+                            "nodeSelectorTerms": [
+                                {
+                                    "matchExpressions": [
+                                        {
+                                            "key": "ibmcloud.io/systemd-calico-node",
+                                            "operator": "DoesNotExist"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                "containers": [
+                    {
+                        "env": [
+                            {
+                                "name": "ETCD_ENDPOINTS",
+                                "valueFrom": {
+                                    "configMapKeyRef": {
+                                        "key": "etcd_endpoints",
+                                        "name": "calico-config"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "CALICO_NETWORKING_BACKEND",
+                                "valueFrom": {
+                                    "configMapKeyRef": {
+                                        "key": "calico_backend",
+                                        "name": "calico-config"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "CLUSTER_TYPE",
+                                "value": "k8s,bgp"
+                            },
+                            {
+                                "name": "CALICO_DISABLE_FILE_LOGGING",
+                                "value": "true"
+                            },
+                            {
+                                "name": "FELIX_DEFAULTENDPOINTTOHOSTACTION",
+                                "value": "ACCEPT"
+                            },
+                            {
+                                "name": "FELIX_IPTABLESREFRESHINTERVAL",
+                                "value": "60"
+                            },
+                            {
+                                "name": "FELIX_PROMETHEUSMETRICSENABLED",
+                                "value": "true"
+                            },
+                            {
+                                "name": "FELIX_PROMETHEUSMETRICSPORT",
+                                "value": "9091"
+                            },
+                            {
+                                "name": "IP",
+                                "value": "autodetect"
+                            },
+                            {
+                                "name": "IP_AUTODETECTION_METHOD",
+                                "value": "interface=(^bond0$|^eth0$|^ens6$)"
+                            },
+                            {
+                                "name": "CALICO_IPV4POOL_CIDR",
+                                "value": "172.30.0.0/16"
+                            },
+                            {
+                                "name": "CALICO_IPV4POOL_IPIP",
+                                "value": "cross-subnet"
+                            },
+                            {
+                                "name": "CALICO_K8S_NODE_REF",
+                                "valueFrom": {
+                                    "fieldRef": {
+                                        "apiVersion": "v1",
+                                        "fieldPath": "spec.nodeName"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "FELIX_IPV6SUPPORT",
+                                "value": "false"
+                            },
+                            {
+                                "name": "FELIX_LOGSEVERITYSCREEN",
+                                "value": "info"
+                            },
+                            {
+                                "name": "FELIX_IPINIPMTU",
+                                "value": "1480"
+                            },
+                            {
+                                "name": "ETCD_CA_CERT_FILE",
+                                "valueFrom": {
+                                    "configMapKeyRef": {
+                                        "key": "etcd_ca",
+                                        "name": "calico-config"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "ETCD_KEY_FILE",
+                                "valueFrom": {
+                                    "configMapKeyRef": {
+                                        "key": "etcd_key",
+                                        "name": "calico-config"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "ETCD_CERT_FILE",
+                                "valueFrom": {
+                                    "configMapKeyRef": {
+                                        "key": "etcd_cert",
+                                        "name": "calico-config"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "FELIX_HEALTHENABLED",
+                                "value": "true"
+                            }
+                        ],
+                        "image": "registry.ng.bluemix.net/armada-master/node:v2.6.5",
+                        "imagePullPolicy": "IfNotPresent",
+                        "livenessProbe": {
+                            "failureThreshold": 6,
+                            "httpGet": {
+                                "path": "/liveness",
+                                "port": 9099,
+                                "scheme": "HTTP"
+                            },
+                            "initialDelaySeconds": 10,
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "name": "calico-node",
+                        "readinessProbe": {
+                            "failureThreshold": 3,
+                            "httpGet": {
+                                "path": "/readiness",
+                                "port": 9099,
+                                "scheme": "HTTP"
+                            },
+                            "periodSeconds": 10,
+                            "successThreshold": 1,
+                            "timeoutSeconds": 1
+                        },
+                        "resources": {
+                            "requests": {
+                                "cpu": "250m"
+                            }
+                        },
+                        "securityContext": {
+                            "privileged": true
+                        },
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/lib/modules",
+                                "name": "lib-modules",
+                                "readOnly": true
+                            },
+                            {
+                                "mountPath": "/var/run/calico",
+                                "name": "var-run-calico"
+                            },
+                            {
+                                "mountPath": "/calico-secrets",
+                                "name": "etcd-certs"
+                            }
+                        ]
+                    },
+                    {
+                        "command": [
+                            "/install-cni.sh"
+                        ],
+                        "env": [
+                            {
+                                "name": "ETCD_ENDPOINTS",
+                                "valueFrom": {
+                                    "configMapKeyRef": {
+                                        "key": "etcd_endpoints",
+                                        "name": "calico-config"
+                                    }
+                                }
+                            },
+                            {
+                                "name": "CNI_NETWORK_CONFIG",
+                                "valueFrom": {
+                                    "configMapKeyRef": {
+                                        "key": "cni_network_config",
+                                        "name": "calico-config"
+                                    }
+                                }
+                            }
+                        ],
+                        "image": "registry.ng.bluemix.net/armada-master/cni:v1.11.2",
+                        "imagePullPolicy": "IfNotPresent",
+                        "name": "install-cni",
+                        "resources": {},
+                        "terminationMessagePath": "/dev/termination-log",
+                        "terminationMessagePolicy": "File",
+                        "volumeMounts": [
+                            {
+                                "mountPath": "/host/opt/cni/bin",
+                                "name": "cni-bin-dir"
+                            },
+                            {
+                                "mountPath": "/host/etc/cni/net.d",
+                                "name": "cni-net-dir"
+                            },
+                            {
+                                "mountPath": "/calico-secrets",
+                                "name": "etcd-certs"
+                            }
+                        ]
+                    }
+                ],
+                "dnsPolicy": "ClusterFirst",
+                "hostNetwork": true,
+                "restartPolicy": "Always",
+                "schedulerName": "default-scheduler",
+                "securityContext": {},
+                "serviceAccount": "calico-node",
+                "serviceAccountName": "calico-node",
+                "terminationGracePeriodSeconds": 0,
+                "tolerations": [
+                    {
+                        "operator": "Exists"
+                    }
+                ],
+                "volumes": [
+                    {
+                        "hostPath": {
+                            "path": "/lib/modules",
+                            "type": ""
+                        },
+                        "name": "lib-modules"
+                    },
+                    {
+                        "hostPath": {
+                            "path": "/var/run/calico",
+                            "type": ""
+                        },
+                        "name": "var-run-calico"
+                    },
+                    {
+                        "hostPath": {
+                            "path": "/opt/cni/bin",
+                            "type": ""
+                        },
+                        "name": "cni-bin-dir"
+                    },
+                    {
+                        "hostPath": {
+                            "path": "/etc/cni/net.d",
+                            "type": ""
+                        },
+                        "name": "cni-net-dir"
+                    },
+                    {
+                        "name": "etcd-certs",
+                        "secret": {
+                            "defaultMode": 420,
+                            "secretName": "calico-etcd-secrets"
+                        }
+                    }
+                ]
+            }
+        },
+        "templateGeneration": 1,
+        "updateStrategy": {
+            "rollingUpdate": {
+                "maxUnavailable": 5
+            },
+            "type": "RollingUpdate"
+        }
+    },
+    "status": {
+        "currentNumberScheduled": 1,
+        "desiredNumberScheduled": 1,
+        "numberAvailable": 1,
+        "numberMisscheduled": 0,
+        "numberReady": 1,
+        "observedGeneration": 1,
+        "updatedNumberScheduled": 1
+    }
+}
