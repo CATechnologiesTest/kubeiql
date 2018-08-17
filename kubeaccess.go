@@ -17,7 +17,7 @@ package main
 import (
 	"context"
 	"encoding/json"
-	//	"fmt"
+	// "fmt"
 	"io/ioutil"
 	"log"
 	"os/exec"
@@ -174,8 +174,8 @@ func getAllK8sObjsOfKindInNamespace(
 	cache := getCache(ctx)
 	var cachedJsonObjs []JsonObject
 	var results []resource
-
-	objs := (*cache)[kind]
+	key := nsCacheKey(kind, ns)
+	objs := (*cache)[key]
 	if objs != nil {
 		cachedJsonObjs = objs.([]JsonObject)
 	} else {
@@ -209,12 +209,11 @@ func getAllK8sObjsOfKindInNamespace(
 			results = append(results, val)
 		}
 	}
-
 	if results == nil {
 		results = make([]resource, 0)
 	}
-	if (*cache)[kind] == nil && len(cachedJsonObjs) > 0 {
-		(*cache)[kind] = cachedJsonObjs
+	if (*cache)[key] == nil && len(cachedJsonObjs) > 0 {
+		(*cache)[key] = cachedJsonObjs
 	}
 	return results
 }
@@ -223,6 +222,6 @@ func cacheKey(kind, namespace, name string) string {
 	return kind + "#" + namespace + "#" + name
 }
 
-func rawCacheKey(kind, namespace, name string) string {
-	return "raw#" + kind + "#" + namespace + "#" + name
+func nsCacheKey(kind, namespace string) string {
+	return kind + "#" + namespace
 }

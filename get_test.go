@@ -63,6 +63,13 @@ func addToCache(cacheref *map[string]interface{}, fname string) {
 	} else {
 		(*cacheref)[kind] = append(existing.([]JsonObject), data)
 	}
+	nsKey := nsCacheKey(kind, ns)
+	nsExisting := (*cacheref)[nsKey]
+	if nsExisting == nil {
+		(*cacheref)[nsKey] = []JsonObject{data}
+	} else {
+		(*cacheref)[nsKey] = append(existing.([]JsonObject), data)
+	}
 }
 
 func TestPods(t *testing.T) {
@@ -303,6 +310,26 @@ func TestPods(t *testing.T) {
                "metadata": { "name": "clunky-sabertooth-joomla" }
              }
            }
+         }`)
+	simpletest(
+		t,
+		`{
+           allPodsInNamespace(namespace: "default") {
+             owner { metadata { name } }
+             rootOwner { metadata { name } }
+           }
+         }`,
+		`{
+           "allPodsInNamespace": [
+             {
+               "owner": {
+                 "metadata": { "name": "clunky-sabertooth-joomla-5d4ddc985d" }
+               },
+               "rootOwner": {
+                 "metadata": { "name": "clunky-sabertooth-joomla" }
+               }
+             }
+           ]
          }`)
 	simpletest(
 		t,
