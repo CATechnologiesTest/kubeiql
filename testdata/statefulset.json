@@ -1,0 +1,108 @@
+{
+  "apiVersion": "apps/v1",
+  "kind": "StatefulSet",
+  "metadata": {
+    "annotations": {
+      "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"apps/v1beta1\",\"kind\":\"StatefulSet\",\"metadata\":{\"annotations\":{},\"name\":\"mongo\",\"namespace\":\"flonjella\"},\"spec\":{\"replicas\":3,\"selector\":{\"matchLabels\":{\"app\":\"mongo\",\"name\":\"mongo\"}},\"serviceName\":\"mongo\",\"template\":{\"metadata\":{\"labels\":{\"app\":\"mongo\",\"name\":\"mongo\"}},\"spec\":{\"containers\":[{\"command\":[\"mongod\",\"--replSet\",\"rs0\"],\"image\":\"mongo:3.4.1\",\"name\":\"mongodb\",\"ports\":[{\"containerPort\":27017,\"name\":\"web\"}]},{\"command\":[\"bash\",\"/config/init.sh\"],\"image\":\"mongo:3.4.1\",\"name\":\"init-mongo\",\"volumeMounts\":[{\"mountPath\":\"/config\",\"name\":\"config\"}]}],\"volumes\":[{\"configMap\":{\"name\":\"mongo-init\"},\"name\":\"config\"}]}}}}\n"
+    },
+    "creationTimestamp": "2018-08-20T15:32:11Z",
+    "generation": 1,
+    "labels": {
+      "app": "mongo",
+      "name": "mongo"
+    },
+    "name": "mongo",
+    "namespace": "flonjella",
+    "resourceVersion": "229449",
+    "selfLink": "/apis/apps/v1/namespaces/flonjella/statefulsets/mongo",
+    "uid": "34e2046e-a48e-11e8-bed1-42ec94e14baf"
+  },
+  "spec": {
+    "podManagementPolicy": "OrderedReady",
+    "replicas": 3,
+    "revisionHistoryLimit": 10,
+    "selector": {
+      "matchLabels": {
+        "app": "mongo",
+        "name": "mongo"
+      }
+    },
+    "serviceName": "mongo",
+    "template": {
+      "metadata": {
+        "creationTimestamp": null,
+        "labels": {
+          "app": "mongo",
+          "name": "mongo"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "command": [
+              "mongod",
+              "--replSet",
+              "rs0"
+            ],
+            "image": "mongo:3.4.1",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "mongodb",
+            "ports": [
+              {
+                "containerPort": 27017,
+                "name": "web",
+                "protocol": "TCP"
+              }
+            ],
+            "resources": null,
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File"
+          },
+          {
+            "command": [
+              "bash",
+              "/config/init.sh"
+            ],
+            "image": "mongo:3.4.1",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "init-mongo",
+            "resources": null,
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/config",
+                "name": "config"
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": null,
+        "terminationGracePeriodSeconds": 30,
+        "volumes": [
+          {
+            "configMap": {
+              "defaultMode": 420,
+              "name": "mongo-init"
+            },
+            "name": "config"
+          }
+        ]
+      }
+    },
+    "updateStrategy": {
+      "type": "OnDelete"
+    }
+  },
+  "status": {
+    "collisionCount": 0,
+    "currentReplicas": 1,
+    "currentRevision": "mongo-fdd786d",
+    "observedGeneration": 1,
+    "replicas": 1,
+    "updateRevision": "mongo-fdd786d"
+  }
+}
