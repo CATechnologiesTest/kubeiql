@@ -42,7 +42,7 @@ browser at 'localhost:8128/' and experiment with the GraphiQL tool
 
 The query:
 
-``` json
+``` graphql
 {
   daemonSetByName(namespace: "kube-system", name: "kube-proxy") {
     metadata {name namespace labels {name value}}
@@ -88,7 +88,7 @@ returns:
 
 and the query:
 
-``` json
+``` graphql
 {
   allPods() {
     owner {kind metadata {name}}
