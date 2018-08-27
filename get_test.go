@@ -436,4 +436,86 @@ func TestPods(t *testing.T) {
              }
            ]
          }`)
+	simpletest(
+		t,
+		`{
+           allServicesInNamespace(namespace: "flonjella") {
+             owner { metadata { name namespace } }
+             rootOwner { metadata { name namespace } }
+             selected { metadata { name labels { name value } } }
+           }
+         }`,
+		`{
+           "allServicesInNamespace": [
+             {
+               "owner": {
+                 "metadata": {
+                   "name": "mongo",
+                   "namespace": "flonjella"
+                 }
+               },
+               "rootOwner": {
+                 "metadata": {
+                   "name": "mongo",
+                   "namespace": "flonjella"
+                 }
+               },
+               "selected": [
+                 {
+                   "metadata": {
+                     "name": "mongo-0",
+                     "labels": [
+                       {"name": "app", "value": "mongo"},
+                       {"name": "controller-revision-hash",
+                        "value": "mongo-fdd786d"},
+                       {"name": "name", "value": "mongo"},
+                       {"name": "statefulset.kubernetes.io/pod-name",
+                        "value": "mongo-0"}
+                     ]
+                   }
+                 }
+               ]
+             }
+           ]
+         }`)
+	simpletest(
+		t,
+		`{
+           serviceByName(namespace: "flonjella", name: "mongo") {
+             owner { metadata { name namespace } }
+             rootOwner { metadata { name namespace } }
+             selected { metadata { name labels { name value } } }
+           }
+         }`,
+		`{
+           "serviceByName": {
+             "owner": {
+               "metadata": {
+                 "name": "mongo",
+                 "namespace": "flonjella"
+               }
+             },
+             "rootOwner": {
+               "metadata": {
+                 "name": "mongo",
+                 "namespace": "flonjella"
+               }
+             },
+             "selected": [
+               {
+                 "metadata": {
+                   "name": "mongo-0",
+                   "labels": [
+                     {"name": "app", "value": "mongo"},
+                     {"name": "controller-revision-hash",
+                      "value": "mongo-fdd786d"},
+                     {"name": "name", "value": "mongo"},
+                     {"name": "statefulset.kubernetes.io/pod-name",
+                      "value": "mongo-0"}
+                   ]
+                 }
+               }
+             ]
+           }
+         }`)
 }
