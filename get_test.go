@@ -41,8 +41,11 @@ func init() {
 		"deployment.json",
 		"replicaset.json",
 		"daemonset.json",
+		"statefulset.json",
+		"service.json",
 		"pod1.json",
-		"pod2.json"} {
+		"pod2.json",
+		"pod3.json"} {
 		addToCache(&cache, "testdata/"+fname)
 	}
 }
@@ -384,6 +387,48 @@ func TestPods(t *testing.T) {
                         "value": "3909226423"},
                        {"name": "k8s-app", "value": "calico-node"},
                        {"name": "pod-template-generation", "value": "1"}
+                     ]
+                   }
+                 }
+               ]
+             }
+           ]
+         }`)
+	simpletest(
+		t,
+		`{
+           allServices() {
+             owner { metadata { name namespace } }
+             rootOwner { metadata { name namespace } }
+             selected { metadata { name labels { name value } } }
+           }
+         }`,
+		`{
+           "allServices": [
+             {
+               "owner": {
+                 "metadata": {
+                   "name": "mongo",
+                   "namespace": "flonjella"
+                 }
+               },
+               "rootOwner": {
+                 "metadata": {
+                   "name": "mongo",
+                   "namespace": "flonjella"
+                 }
+               },
+               "selected": [
+                 {
+                   "metadata": {
+                     "name": "mongo-0",
+                     "labels": [
+                       {"name": "app", "value": "mongo"},
+                       {"name": "controller-revision-hash",
+                        "value": "mongo-fdd786d"},
+                       {"name": "name", "value": "mongo"},
+                       {"name": "statefulset.kubernetes.io/pod-name",
+                        "value": "mongo-0"}
                      ]
                    }
                  }

@@ -52,6 +52,8 @@ func mapToResource(
 		return &statefulSetResolver{ctx, mapToStatefulSet(ctx, rMap)}
 	case PodKind:
 		return &podResolver{ctx, mapToPod(ctx, rMap)}
+	case ServiceKind:
+		return &serviceResolver{ctx, mapToService(ctx, rMap)}
 	}
 
 	fmt.Printf("BAD KIND: %v\n", kind)
@@ -81,6 +83,11 @@ func (r *resourceResolver) ToStatefulSet() (*statefulSetResolver, bool) {
 
 func (r *resourceResolver) ToDeployment() (*deploymentResolver, bool) {
 	c, ok := r.r.(*deploymentResolver)
+	return c, ok
+}
+
+func (r *resourceResolver) ToService() (*serviceResolver, bool) {
+	c, ok := r.r.(*serviceResolver)
 	return c, ok
 }
 

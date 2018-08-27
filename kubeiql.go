@@ -48,6 +48,10 @@ var Schema = `
       allStatefulSets(): [StatefulSet]
       allStatefulSetsInNamespace(namespace: String!): [StatefulSet]
       statefulSetByName(namespace: String!, name: String!): StatefulSet
+      # look up services
+      allServices(): [Service]
+      allServicesInNamespace(namespace: String!): [Service]
+      serviceByName(namespace: String!, name: String!): Service
     }
 
     # The mutation type, represents all updates we can make to our data
@@ -62,6 +66,83 @@ var Schema = `
       error
       fatal
       panic
+    }
+
+    # A service
+    type Service implements Resource {
+      # The metadata for the service (name, labels, namespace, etc.)
+      metadata: Metadata!
+      # The description for the service
+      spec: ServiceSpec!
+      # The direct owner of the replicaSet
+      owner: Resource
+      # The root owner of the replicaSet
+      rootOwner: Resource
+      # Which controllers does this service select?
+      selected: [Resource!]!
+      # Runtime status
+      # status ServiceStatus! XXX
+    }
+
+    # Description of a service
+    type ServiceSpec {
+      # IP Address of the service
+      clusterIP: String
+      # External IPs
+      externalIPs: [String!]
+      # External reference for kubedns
+      externalName: String
+      # How a service should redirect to ports
+      externalTrafficPolicy: String
+      # Port used by health checks
+      healthCheckNodePort: Int
+      # IP for load balancer
+      loadBalancerIP: String
+      # Ranges from which to choose load balancer IPs
+      loadBalancerSourceRanges: [String!]
+      # Exposed ports
+      ports: [ServicePort!]
+      # Whether to publish dns addresses when peers are not yet ready for
+      # discovery
+      publishNotReadyAddresses: Boolean
+      # Labels to select controllers for association with the service
+      selector: [Label!]!
+      # Whether or not to use session affinity ("ClientIP" or "None")
+      sessionAffinity: String
+      # Config for session affinity
+      sessionAffinityConfig: SessionAffinityConfig
+      # Type of service
+      type: ServiceType!
+    }
+
+    # A port managed by a service
+    type ServicePort {
+      # port name,  if any -- required if multiple ports
+      name: String
+      # port allocated to each node on which this service is exposed
+      nodePort: Int
+      # port exposed by the service
+      port: Int!
+      # IP Protocol - "TCP" or "UDP", default: "TCP"
+      protocol: String
+      # Number or name of port on the pods targeted by the service
+      targetPortString: String
+      targetPortInt: Int
+    }
+
+    # Service Types
+    enum ServiceType { ClientIP NodePort ExternalName LoadBalancer }
+
+    # Session affinity config
+    type SessionAffinityConfig {
+      # config for client IP
+      clientIP: ClientIPConfig!
+    }
+
+    # Client IP config
+    type ClientIPConfig {
+      # timeout between 0 and 86400 (one day)
+      timeoutSeconds: Int!
     }
 
     # A pod
@@ -592,6 +673,7 @@ const ReplicaSetKind = "ReplicaSet"
 const StatefulSetKind = "StatefulSet"
 const DaemonSetKind = "DaemonSet"
 const DeploymentKind = "Deployment"
+const ServiceKind = "Service"
 
 // The root of all queries and mutations. All defined queries and mutations
 // start as methods on Resolver
@@ -783,6 +865,52 @@ func (r *Resolver) StatefulSetByName(
 	}) *statefulSetResolver {
 	return getK8sResource(
 		ctx, StatefulSetKind, args.Namespace, args.Name).(*statefulSetResolver)
+}
+
+// Service lookups
+func (r *Resolver) AllServices(ctx context.Context) *[]*serviceResolver {
+	sset := getAllK8sObjsOfKind(
+		ctx,
+		ServiceKind,
+		func(jobj JsonObject) bool { return true })
+
+	results := make([]*serviceResolver, len(sset))
+
+	for idx, s := range sset {
+		results[idx] = s.(*serviceResolver)
+	}
+
+	return &results
+}
+
+func (r *Resolver) AllServicesInNamespace(
+	ctx context.Context,
+	args *struct {
+		Namespace string
+	}) *[]*serviceResolver {
+	sset := getAllK8sObjsOfKindInNamespace(
+		ctx,
+		ServiceKind,
+		args.Namespace,
+		func(jobj JsonObject) bool { return true })
+
+	results := make([]*serviceResolver, len(sset))
+
+	for idx, p := range sset {
+		results[idx] = p.(*serviceResolver)
+	}
+
+	return &results
+}
+
+func (r *Resolver) ServiceByName(
+	ctx context.Context,
+	args *struct {
+		Namespace string
+		Name      string
+	}) *serviceResolver {
+	return getK8sResource(
+		ctx, ServiceKind, args.Namespace, args.Name).(*serviceResolver)
 }
 
 // DaemonSet lookups
