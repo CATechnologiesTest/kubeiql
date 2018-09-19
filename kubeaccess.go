@@ -72,7 +72,12 @@ func lookUpMap(
 	kind, namespace, name string) JsonObject {
 	cache := getCache(ctx)
 	key := cacheKey(kind, namespace, name)
-	cachedVal := (*cache)[key]
+	var cachedVal interface{}
+	if isWatchedKind(kind) {
+		cachedVal = cacheLookup(key)
+	} else {
+		cachedVal = (*cache)[key]
+	}
 	var result JsonObject
 	if cachedVal == nil {
 		if isTest() {
@@ -121,7 +126,12 @@ func getAllK8sObjsOfKind(
 	var cachedJsonObjs []JsonObject
 	var results []resource
 
-	objs := (*cache)[kind]
+	var objs interface{}
+	if isWatchedKind(kind) {
+		objs = cacheLookup(kind)
+	} else {
+		objs = (*cache)[kind]
+	}
 	if objs != nil {
 		cachedJsonObjs = objs.([]JsonObject)
 	} else {
@@ -175,7 +185,12 @@ func getAllK8sObjsOfKindInNamespace(
 	var cachedJsonObjs []JsonObject
 	var results []resource
 	key := nsCacheKey(kind, ns)
-	objs := (*cache)[key]
+	var objs interface{}
+	if isWatchedKind(kind) {
+		objs = cacheLookup(key)
+	} else {
+		objs = (*cache)[key]
+	}
 	if objs != nil {
 		cachedJsonObjs = objs.([]JsonObject)
 	} else {
@@ -216,12 +231,4 @@ func getAllK8sObjsOfKindInNamespace(
 		(*cache)[key] = cachedJsonObjs
 	}
 	return results
-}
-
-func cacheKey(kind, namespace, name string) string {
-	return kind + "#" + namespace + "#" + name
-}
-
-func nsCacheKey(kind, namespace string) string {
-	return kind + "#" + namespace
 }

@@ -40,6 +40,8 @@ func init() {
 	} else {
 		KubectlPath = "/usr/local/bin/kubectl"
 	}
+	initCache()
+	initWatchers()
 }
 
 func main() {
