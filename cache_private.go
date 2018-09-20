@@ -21,7 +21,7 @@ import (
 // N.B.: this is the cache implementation whose functions are
 // not intended to be called directly.
 // The intended cache interface
-// is in cache_public.go: namely "lookup", "add", "remove",
+// is in cache_public.go: namely "Lookup", "Add", "Remove",
 // and the key-building functions.
 // All access to the cache is intended to be via the server mailbox.
 // That is our serialization mechanism (akin to an erlang gen_server).
@@ -112,7 +112,8 @@ func cacheLookup(key string) interface{} {
 		if ref, ok := val.(*JsonObject); ok {
 			return *ref
 		} else if list, ok := val.([]*JsonObject); ok {
-			// XXX: clone slices??
+			// clone returned slice so that its "shape" can't be changed
+			// while caller is holding it...
 			retlist := make([]JsonObject, len(list))
 			for idx, item := range list {
 				retlist[idx] = *item
