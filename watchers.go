@@ -59,13 +59,13 @@ func buildWatchUrl(kind string) string {
 	if watchurl, ok := watchUrlByKind[kind]; ok {
 		return apiHost + watchurl
 	}
-	panic(fmt.Sprintf("no url for kind: '%s'", kind))
+	panic(fmt.Sprintf("no watcher url for kind: '%s'", kind))
 }
 
 func readSecret(name string) []byte {
 	b, err := ioutil.ReadFile(secretDir + "/" + name)
 	if err != nil {
-		panic(fmt.Sprintf("error reading secret %s: %s\n",
+		panic(fmt.Sprintf("watcher error reading secret %s: %s\n",
 			name, err.Error()))
 	}
 	return b
@@ -112,7 +112,7 @@ func initClient() {
 func makeWatchRequest(kind string) *http.Request {
 	req, err := http.NewRequest("GET", buildWatchUrl(kind), nil)
 	if err != nil {
-		panic(fmt.Sprintf("http.NewRequest error for kind %s: %s\n",
+		panic(fmt.Sprintf("watcher http.NewRequest error for kind %s: %s\n",
 			kind, err.Error()))
 	}
 	req.Header.Add("Authorization", "Bearer "+token)
@@ -130,20 +130,20 @@ func runWatcher(kind string) {
 	for {
 		line, err := reader.ReadBytes('\n')
 		if err != nil {
-			panic(err)
+			panic(fmt.Sprintf("read error on watcher stream: %s\n", err.Error()))
 		}
 		var notif Notification
 		if err := json.Unmarshal(line, &notif); err != nil {
-			panic(err)
+			panic(fmt.Sprintf("JSON unmarshal error on watcher input: %s\n",
+				err.Error()))
 		}
 
 		if notif.Type == "ADDED" || notif.Type == "MODIFIED" {
-			addToCache(&notif.Object)
+			GetCache().Add(&notif.Object)
 		} else if notif.Type == "DELETED" {
-			removeFromCache(&notif.Object)
+			GetCache().Remove(&notif.Object)
 		}
 	}
-	fmt.Printf("watcher terminates...\n")
 }
 
 func initWatchers() {

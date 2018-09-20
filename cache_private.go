@@ -18,17 +18,42 @@ import (
 	"fmt"
 )
 
+// N.B.: this is the cache implementation whose functions are
+// not intended to be called directly.
+// The intended cache interface
+// is in cache_public.go: namely "lookup", "add", "remove",
+// and the key-building functions.
+// All access to the cache is intended to be via the server mailbox.
+// That is our serialization mechanism (akin to an erlang gen_server).
+//
+// (Deliberately resisting the "internal" package goo...)
 var cache map[string]interface{}
+
+func runServer(mbox <-chan *CacheRequest) {
+	for {
+		req, ok := <-mbox
+		if ok {
+			req.replyChan <- req.operation()
+		} else {
+			break
+		}
+	}
+}
 
 func initCache() {
 	cache = make(map[string]interface{})
+	serverMbox := make(chan *CacheRequest)
+	go runServer(serverMbox)
+	initCacheClient(serverMbox)
 }
 
 func findInList(clist []*JsonObject, target *JsonObject) int {
 	targids := getObjIds(target)
 	for idx, obj := range clist {
 		ids := getObjIds(obj)
-		if targids.name == ids.name && targids.namespace == ids.namespace {
+		if targids.name == ids.name &&
+			targids.namespace == ids.namespace &&
+			targids.kind == ids.kind {
 			return idx
 		}
 	}
@@ -40,7 +65,7 @@ func deleteFromCacheList(key string, obj *JsonObject) {
 		clist := val.([]*JsonObject)
 		idx := findInList(clist, obj)
 		if idx > -1 {
-			clist = append(clist[:idx], clist[idx+1:]...)
+			cache[key] = append(clist[:idx], clist[idx+1:]...)
 		}
 	}
 }
@@ -99,12 +124,4 @@ func cacheLookup(key string) interface{} {
 	} else {
 		return nil
 	}
-}
-
-func cacheKey(kind, namespace, name string) string {
-	return kind + "#" + namespace + "#" + name
-}
-
-func nsCacheKey(kind, namespace string) string {
-	return kind + "#" + namespace
 }

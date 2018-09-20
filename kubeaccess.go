@@ -74,7 +74,7 @@ func lookUpMap(
 	key := cacheKey(kind, namespace, name)
 	var cachedVal interface{}
 	if isWatchedKind(kind) {
-		cachedVal = cacheLookup(key)
+		cachedVal = GetCache().Lookup(key)
 	} else {
 		cachedVal = (*cache)[key]
 	}
@@ -128,7 +128,7 @@ func getAllK8sObjsOfKind(
 
 	var objs interface{}
 	if isWatchedKind(kind) {
-		objs = cacheLookup(kind)
+		objs = GetCache().Lookup(kind)
 	} else {
 		objs = (*cache)[kind]
 	}
@@ -187,7 +187,7 @@ func getAllK8sObjsOfKindInNamespace(
 	key := nsCacheKey(kind, ns)
 	var objs interface{}
 	if isWatchedKind(kind) {
-		objs = cacheLookup(key)
+		objs = GetCache().Lookup(key)
 	} else {
 		objs = (*cache)[key]
 	}
