@@ -29,18 +29,6 @@ type Notification struct {
 	Object JsonObject
 }
 
-type ObjId struct {
-	kind      string
-	namespace string
-	name      string
-}
-
-// const secretDir = "/var/run/secrets/kubernetes.io/serviceaccount"
-const secretDir = "/Users/engji01"
-
-// const apiHost = "https://kubernetes.default.svc"
-const apiHost = "https://192.168.99.100:8443"
-
 var watchUrlByKind = map[string]string{
 	"Pod":         "/api/v1/watch/pods?watch=true",
 	"Deployment":  "/apis/apps/v1/watch/deployments?watch=true",
@@ -57,13 +45,16 @@ func isWatchedKind(kind string) bool {
 
 func buildWatchUrl(kind string) string {
 	if watchurl, ok := watchUrlByKind[kind]; ok {
-		return apiHost + watchurl
+		return ApiHost + watchurl
 	}
 	panic(fmt.Sprintf("no watcher url for kind: '%s'", kind))
 }
 
 func readSecret(name string) []byte {
-	b, err := ioutil.ReadFile(secretDir + "/" + name)
+	if ApiSecretPath == "" {
+		return nil
+	}
+	b, err := ioutil.ReadFile(ApiSecretPath + "/" + name)
 	if err != nil {
 		panic(fmt.Sprintf("watcher error reading secret %s: %s\n",
 			name, err.Error()))
@@ -72,41 +63,30 @@ func readSecret(name string) []byte {
 }
 
 func getTlsConfig() *tls.Config {
-	roots := x509.NewCertPool()
-	roots.AppendCertsFromPEM(readSecret("ca.crt"))
-	tlsConfig := &tls.Config{}
-	tlsConfig.RootCAs = roots
+	cert := readSecret("ca.crt")
+	if cert != nil {
+		roots := x509.NewCertPool()
+		roots.AppendCertsFromPEM(cert)
+		tlsConfig := &tls.Config{}
+		tlsConfig.RootCAs = roots
 
-	return tlsConfig
-}
-
-func getObjIds(obj *JsonObject) ObjId {
-	var kind, namespace, name string
-	if k, ok := (*obj)["kind"]; ok {
-		kind = k.(string)
+		return tlsConfig
 	}
-	if meta, ok := (*obj)["metadata"]; ok {
-		if md, ok := meta.(map[string]interface{}); ok {
-			if nm, ok := md["name"]; ok {
-				name = nm.(string)
-			}
-			if ns, ok := md["namespace"]; ok {
-				namespace = ns.(string)
-			}
-		}
-	}
-	return ObjId{kind: kind, namespace: namespace, name: name}
+	return nil
 }
 
 var k8sClient *http.Client
-var token string
+var token = ""
 
 func initClient() {
-	tr := &http.Transport{
-		TLSClientConfig: getTlsConfig(),
+	tr := &http.Transport{}
+	if tlsConfig := getTlsConfig(); tlsConfig != nil {
+		tr.TLSClientConfig = tlsConfig
 	}
 	k8sClient = &http.Client{Transport: tr}
-	token = string(readSecret("token"))
+	if tok := readSecret("token"); tok != nil {
+		token = string(tok)
+	}
 }
 
 func makeWatchRequest(kind string) *http.Request {
@@ -115,7 +95,9 @@ func makeWatchRequest(kind string) *http.Request {
 		panic(fmt.Sprintf("watcher http.NewRequest error for kind %s: %s\n",
 			kind, err.Error()))
 	}
-	req.Header.Add("Authorization", "Bearer "+token)
+	if token != "" {
+		req.Header.Add("Authorization", "Bearer "+token)
+	}
 	return req
 }
 

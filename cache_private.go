@@ -48,12 +48,14 @@ func initCache() {
 }
 
 func findInList(clist []*JsonObject, target *JsonObject) int {
-	targids := getObjIds(target)
+	tname := getName(*target)
+	tns := getNamespace(*target)
+	tkind := getKind(*target)
 	for idx, obj := range clist {
-		ids := getObjIds(obj)
-		if targids.name == ids.name &&
-			targids.namespace == ids.namespace &&
-			targids.kind == ids.kind {
+		name := getName(*obj)
+		ns := getNamespace(*obj)
+		kind := getKind(*obj)
+		if tname == name && tns == ns && tkind == kind {
 			return idx
 		}
 	}
@@ -85,26 +87,29 @@ func addToCacheList(key string, obj *JsonObject) {
 }
 
 func formattedName(obj *JsonObject) string {
-	ids := getObjIds(obj)
-	return cacheKey(ids.kind, ids.namespace, ids.name)
+	return cacheKey(getKind(*obj), getNamespace(*obj), getName(*obj))
 }
 
 func addToCache(obj *JsonObject) {
-	ids := getObjIds(obj)
-	cacheKey := cacheKey(ids.kind, ids.namespace, ids.name)
-	nsCacheKey := nsCacheKey(ids.kind, ids.namespace)
+	kind := getKind(*obj)
+	ns := getNamespace(*obj)
+	name := getName(*obj)
+	cacheKey := cacheKey(kind, ns, name)
+	nsCacheKey := nsCacheKey(kind, ns)
 	cache[cacheKey] = obj
 	addToCacheList(nsCacheKey, obj)
-	addToCacheList(ids.kind, obj)
+	addToCacheList(kind, obj)
 }
 
 func removeFromCache(obj *JsonObject) {
-	ids := getObjIds(obj)
-	cacheKey := cacheKey(ids.kind, ids.namespace, ids.name)
-	nsCacheKey := nsCacheKey(ids.kind, ids.namespace)
+	kind := getKind(*obj)
+	ns := getNamespace(*obj)
+	name := getName(*obj)
+	cacheKey := cacheKey(kind, ns, name)
+	nsCacheKey := nsCacheKey(kind, ns)
 	delete(cache, cacheKey)
 	deleteFromCacheList(nsCacheKey, obj)
-	deleteFromCacheList(ids.kind, obj)
+	deleteFromCacheList(kind, obj)
 }
 
 func cacheLookup(key string) interface{} {

@@ -25,8 +25,20 @@ import (
 	"os"
 )
 
-var KubectlPath string
+var KubectlPath = getFromEnv("KUBECTL_PATH", "/usr/local/bin/kubectl")
 var schema *graphql.Schema
+
+var ApiHost = getFromEnv("API_HOST", "http://localhost:8080")
+var ApiSecretPath = getFromEnv("API_SECRET_PATH", "")
+
+func getFromEnv(key, defval string) string {
+	val, ok := os.LookupEnv(key)
+	if !ok {
+		return defval
+	} else {
+		return val
+	}
+}
 
 func init() {
 	var err error
@@ -34,11 +46,6 @@ func init() {
 	fmt.Println(schema)
 	if err != nil {
 		panic(err)
-	}
-	if path := os.Getenv("KUBECTL_PATH"); path != "" {
-		KubectlPath = path
-	} else {
-		KubectlPath = "/usr/local/bin/kubectl"
 	}
 	initCache()
 	initWatchers()
