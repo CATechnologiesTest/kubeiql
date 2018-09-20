@@ -6,7 +6,7 @@ interface to a Kubernetes cluster. It is not intended to entirely replace the
 ReST APIs as some of them (particularly the watch APIs) don't map well
 onto GraphQL.
 
-Yipee.io is a CA, Inc. Accelerator project.  
+Yipee.io is a CA, Inc. Accelerator project.
 
 ## Current Status
 
@@ -15,10 +15,16 @@ pre-alpha
 * Queries are currently supported against Pods, Deployments,
 ReplicaSets, StatefulSets, and DaemonSets.
 * No mutations are yet implemented.
-* The retrieval of data from the cluster is currently a hack on top of
-kubectl to enable the development of the graph traversal code. The
-plan is to use API Aggregation to put the cluster lookups into the API
-Service.
+* The retrieval of data from the cluster is accomplished via watchers
+on the kubernetes API. By default, we expect to access the API at
+localhost port 8080 (run "kubectl proxy --port=8080")
+  * to access a kubernetes API without using the proxy, you can set
+    environment variables:
+    * API_HOST: host/port of API, e.g., https://kubernetes.default.svc
+      from inside a cluster
+    * API_SECRET_PATH: directory containing files 'ca.crt' and
+      'token', e.g. /var/run/secrets/kubernetes.io/serviceaccount from
+      a pod inside a cluster
 * Tests are lacking
 * Not yet built into a container (which we will need to deploy within
   the cluster's API service)
@@ -31,7 +37,9 @@ To experiment with the API:
 3. If your kubectl is located somewhere other than /usr/local/bin, set
 the environment variable: KUBECTL_PATH to the location of your
 executable (e.g. KUBECTL_PATH=/usr/share/local/bin/kubectl)
-4. Run ./kubeiql
+4. Start a proxy for the kubernetes API on port 8080 (e.g., kubectl
+   proxy --port=8080)
+5. Run ./kubeiql
 
 The server runs at port 8128. You can use curl to play with it as
 shown in the examples below via the /query endpoint, or point your
