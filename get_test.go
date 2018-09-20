@@ -46,33 +46,18 @@ func init() {
 		"pod1.json",
 		"pod2.json",
 		"pod3.json"} {
-		addToCache(&cache, "testdata/"+fname)
+		addToTestCache(&cache, "testdata/"+fname)
 	}
 }
 
-func addToCache(cacheref *map[string]interface{}, fname string) {
+func addToTestCache(cacheref *map[string]interface{}, fname string) {
 	bytes, err := ioutil.ReadFile(fname)
 	if err != nil {
 		log.Fatal(err)
 	}
 	data := fromJson(bytes).(JsonObject)
-	kind := data["kind"].(string)
-	ns := getNamespace(data)
-	name := getName(data)
-	(*cacheref)[cacheKey(kind, ns, name)] = data
-	existing := (*cacheref)[kind]
-	if existing == nil {
-		(*cacheref)[kind] = []JsonObject{data}
-	} else {
-		(*cacheref)[kind] = append(existing.([]JsonObject), data)
-	}
-	nsKey := nsCacheKey(kind, ns)
-	nsExisting := (*cacheref)[nsKey]
-	if nsExisting == nil {
-		(*cacheref)[nsKey] = []JsonObject{data}
-	} else {
-		(*cacheref)[nsKey] = append(existing.([]JsonObject), data)
-	}
+	cache := GetCache()
+	cache.Add(&data)
 }
 
 func TestPods(t *testing.T) {
