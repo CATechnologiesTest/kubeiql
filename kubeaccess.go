@@ -17,10 +17,7 @@ package main
 import (
 	"context"
 	"encoding/json"
-	// "fmt"
-	"io/ioutil"
-	"log"
-	"os/exec"
+	"fmt"
 )
 
 // Functions for retrieving Kubernetes information from a cluster
@@ -70,41 +67,13 @@ func isTest() bool {
 func lookUpMap(
 	ctx context.Context,
 	kind, namespace, name string) JsonObject {
-	cache := getCache(ctx)
 	key := cacheKey(kind, namespace, name)
 	var cachedVal interface{}
-	if isWatchedKind(kind) {
-		cachedVal = GetCache().Lookup(key)
-	} else {
-		cachedVal = (*cache)[key]
+	if !isWatchedKind(kind) {
+		panic(fmt.Sprintf("Add watcher for kind '%s'", kind))
 	}
-	var result JsonObject
-	if cachedVal == nil {
-		if isTest() {
-			return map[string]interface{}{}
-		}
-		cmd := exec.Command(KubectlPath, "get",
-			"-o", "json", "--namespace", namespace, kind, name)
-		stdout, err := cmd.StdoutPipe()
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err := cmd.Start(); err != nil {
-			log.Fatal(err)
-		}
-		bytes, err := ioutil.ReadAll(stdout)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err := cmd.Wait(); err != nil {
-			log.Fatal(err)
-		}
-		result = fromJson(bytes).(JsonObject)
-		(*cache)[key] = result
-	} else {
-		result = cachedVal.(JsonObject)
-	}
-	return result
+	cachedVal = GetCache().Lookup(key)
+	return cachedVal.(JsonObject)
 }
 
 func lookUpResource(ctx context.Context, kind, namespace, name string) resource {
@@ -117,118 +86,49 @@ func lookUpResource(ctx context.Context, kind, namespace, name string) resource 
 	return mapToResource(ctx, mapval)
 }
 
+func getCachedResourceList(
+	ctx context.Context,
+	cacheKey string,
+	test func(JsonObject) bool) []resource {
+
+	var cachedJsonObjs []JsonObject
+	var results []resource
+
+	if objs := GetCache().Lookup(cacheKey); objs != nil {
+		cachedJsonObjs = objs.([]JsonObject)
+	}
+	for _, res := range cachedJsonObjs {
+		val := mapToResource(ctx, res)
+		if test(res) {
+			results = append(results, val)
+		}
+	}
+	if results == nil {
+		results = make([]resource, 0)
+	}
+	return results
+}
+
 // Get all resource instances of a specific kind
 func getAllK8sObjsOfKind(
 	ctx context.Context,
 	kind string,
 	test func(JsonObject) bool) []resource {
-	cache := getCache(ctx)
-	var cachedJsonObjs []JsonObject
-	var results []resource
 
-	var objs interface{}
-	if isWatchedKind(kind) {
-		objs = GetCache().Lookup(kind)
-	} else {
-		objs = (*cache)[kind]
+	if !isWatchedKind(kind) {
+		panic(fmt.Sprintf("Add watcher for kind '%s'", kind))
 	}
-	if objs != nil {
-		cachedJsonObjs = objs.([]JsonObject)
-	} else {
-		if isTest() {
-			return make([]resource, 0)
-		}
-		cmd := exec.Command(KubectlPath, "get",
-			"-o", "json", "--all-namespaces", kind)
-		stdout, err := cmd.StdoutPipe()
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err := cmd.Start(); err != nil {
-			log.Fatal(err)
-		}
-		bytes, err := ioutil.ReadAll(stdout)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err := cmd.Wait(); err != nil {
-			log.Fatal(err)
-		}
-		arr := (fromJson(bytes).(JsonObject))["items"].(JsonArray)
-		for _, val := range arr {
-			cachedJsonObjs = append(cachedJsonObjs, val.(JsonObject))
-		}
-	}
-	for _, res := range cachedJsonObjs {
-		val := mapToResource(ctx, res)
-		if test(res) {
-			results = append(results, val)
-		}
-	}
-
-	if results == nil {
-		results = make([]resource, 0)
-	}
-	if (*cache)[kind] == nil && len(cachedJsonObjs) > 0 {
-		(*cache)[kind] = cachedJsonObjs
-	}
-	return results
+	return getCachedResourceList(ctx, kind, test)
 }
 
 // Get all resource instances of a specific kind in a specific namespace
-
 func getAllK8sObjsOfKindInNamespace(
 	ctx context.Context,
 	kind, ns string,
 	test func(JsonObject) bool) []resource {
-	cache := getCache(ctx)
-	var cachedJsonObjs []JsonObject
-	var results []resource
 	key := nsCacheKey(kind, ns)
-	var objs interface{}
-	if isWatchedKind(kind) {
-		objs = GetCache().Lookup(key)
-	} else {
-		objs = (*cache)[key]
+	if !isWatchedKind(kind) {
+		panic(fmt.Sprintf("Add watcher for kind '%s'", kind))
 	}
-	if objs != nil {
-		cachedJsonObjs = objs.([]JsonObject)
-	} else {
-		if isTest() {
-			return make([]resource, 0)
-		}
-		cmd := exec.Command(KubectlPath, "get",
-			"-o", "json", "--namespace", ns, kind)
-		stdout, err := cmd.StdoutPipe()
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err := cmd.Start(); err != nil {
-			log.Fatal(err)
-		}
-		bytes, err := ioutil.ReadAll(stdout)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err := cmd.Wait(); err != nil {
-			log.Fatal(err)
-		}
-		arr := (fromJson(bytes).(JsonObject))["items"].(JsonArray)
-		for _, val := range arr {
-			cachedJsonObjs = append(cachedJsonObjs, val.(JsonObject))
-		}
-	}
-	for _, res := range cachedJsonObjs {
-		val := mapToResource(ctx, res)
-		if test(res) {
-			results = append(results, val)
-		}
-	}
-	if results == nil {
-		results = make([]resource, 0)
-	}
-	if (*cache)[key] == nil && len(cachedJsonObjs) > 0 {
-		(*cache)[key] = cachedJsonObjs
-	}
-	return results
+	return getCachedResourceList(ctx, key, test)
 }

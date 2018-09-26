@@ -21,8 +21,8 @@ import (
 // N.B.: this is the cache implementation whose functions are
 // not intended to be called directly.
 // The intended cache interface
-// is in cache_public.go: namely "Lookup", "Add", "Remove",
-// and the key-building functions.
+// is in cache_access.go: namely "Lookup", "Add", "Remove",
+// along with the key-building functions.
 // All access to the cache is intended to be via the server mailbox.
 // That is our serialization mechanism (akin to an erlang gen_server).
 //
