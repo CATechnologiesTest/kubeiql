@@ -26,8 +26,8 @@ localhost port 8080 (run "kubectl proxy --port=8080")
       'token', e.g. /var/run/secrets/kubernetes.io/serviceaccount from
       a pod inside a cluster
 * Tests are lacking
-* Not yet built into a container (which we will need to deploy within
-  the cluster's API service)
+* See https://hub.docker.com/r/yipeeio/kubeiql/ for a docker image
+
 
 ## Getting Started
 To experiment with the API:
