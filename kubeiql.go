@@ -296,8 +296,6 @@ var Schema = `
       initContainers: [Container!]
       # Name of specific host on which to schedule the pod (if any)
       nodeName: String
-      # A selector that must be true for the pod to fit on a node
-      nodeSelector: NodeSelector
       # Priority of the pod
       priority: Int
       # Class name of priority class for the pod

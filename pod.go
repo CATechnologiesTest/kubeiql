@@ -42,7 +42,6 @@ type podSpec struct {
 	ImagePullSecrets              *[]localObjectReference
 	InitContainers                *[]container
 	NodeName                      *string
-	NodeSelector                  *nodeSelector
 	Priority                      *int32
 	PriorityClassName             *string
 	ReadinessGates                *[]podReadinessGate
@@ -298,7 +297,6 @@ func mapToPodSpec(ctx context.Context, jsonObj JsonObject) podSpec {
 	ips := arrayToLOR(jg)
 	ic := arrayToInitContainers(jg)
 	nn := jg.stringRefItemOr("nodeName", nil)
-	ns := extractNodeSelector(jg)
 	p := jg.intRefItemOr("priority", nil)
 	pcn := jg.stringRefItemOr("priorityClassName", nil)
 	rg := arrayToReadinessGates(jg)
@@ -326,7 +324,6 @@ func mapToPodSpec(ctx context.Context, jsonObj JsonObject) podSpec {
 		ips,
 		ic,
 		nn,
-		ns,
 		p,
 		pcn,
 		rg,
@@ -1115,13 +1112,6 @@ func (r podSpecResolver) InitContainers() *[]containerResolver {
 
 func (r podSpecResolver) NodeName() *string {
 	return r.p.NodeName
-}
-
-func (r podSpecResolver) NodeSelector() *nodeSelectorResolver {
-	if r.p.NodeSelector == nil {
-		return nil
-	}
-	return &nodeSelectorResolver{r.ctx, *r.p.NodeSelector}
 }
 
 func (r podSpecResolver) Priority() *int32 {
