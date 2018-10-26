@@ -724,7 +724,11 @@ func (r *Resolver) PodByName(
 		Namespace string
 		Name      string
 	}) *podResolver {
-	return getK8sResource(ctx, PodKind, args.Namespace, args.Name).(*podResolver)
+	res := getK8sResource(ctx, PodKind, args.Namespace, args.Name)
+	if res == nil {
+		return nil
+	}
+	return res.(*podResolver)
 }
 
 // Deployment lookups
@@ -769,8 +773,11 @@ func (r *Resolver) DeploymentByName(
 		Namespace string
 		Name      string
 	}) *deploymentResolver {
-	return getK8sResource(
-		ctx, DeploymentKind, args.Namespace, args.Name).(*deploymentResolver)
+	res := getK8sResource(ctx, DeploymentKind, args.Namespace, args.Name)
+	if res == nil {
+		return nil
+	}
+	return res.(*deploymentResolver)
 }
 
 // ReplicaSet lookups
@@ -815,8 +822,11 @@ func (r *Resolver) ReplicaSetByName(
 		Namespace string
 		Name      string
 	}) *replicaSetResolver {
-	return getK8sResource(
-		ctx, ReplicaSetKind, args.Namespace, args.Name).(*replicaSetResolver)
+	res := getK8sResource(ctx, ReplicaSetKind, args.Namespace, args.Name)
+	if res == nil {
+		return nil
+	}
+	return res.(*replicaSetResolver)
 }
 
 // StatefulSet lookups
@@ -861,8 +871,11 @@ func (r *Resolver) StatefulSetByName(
 		Namespace string
 		Name      string
 	}) *statefulSetResolver {
-	return getK8sResource(
-		ctx, StatefulSetKind, args.Namespace, args.Name).(*statefulSetResolver)
+	res := getK8sResource(ctx, StatefulSetKind, args.Namespace, args.Name)
+	if res == nil {
+		return nil
+	}
+	return res.(*statefulSetResolver)
 }
 
 // Service lookups
@@ -907,8 +920,11 @@ func (r *Resolver) ServiceByName(
 		Namespace string
 		Name      string
 	}) *serviceResolver {
-	return getK8sResource(
-		ctx, ServiceKind, args.Namespace, args.Name).(*serviceResolver)
+	res := getK8sResource(ctx, ServiceKind, args.Namespace, args.Name)
+	if res == nil {
+		return nil
+	}
+	return res.(*serviceResolver)
 }
 
 // DaemonSet lookups
@@ -953,6 +969,9 @@ func (r *Resolver) DaemonSetByName(
 		Namespace string
 		Name      string
 	}) *daemonSetResolver {
-	return getK8sResource(
-		ctx, DaemonSetKind, args.Namespace, args.Name).(*daemonSetResolver)
+	res := getK8sResource(ctx, DaemonSetKind, args.Namespace, args.Name)
+	if res == nil {
+		return nil
+	}
+	return res.(*daemonSetResolver)
 }

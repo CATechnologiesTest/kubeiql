@@ -73,6 +73,9 @@ func lookUpMap(
 		panic(fmt.Sprintf("Add watcher for kind '%s'", kind))
 	}
 	cachedVal = GetCache().Lookup(key)
+	if cachedVal == nil {
+		return nil
+	}
 	return cachedVal.(JsonObject)
 }
 

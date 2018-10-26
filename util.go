@@ -22,7 +22,10 @@ import (
 // Utility methods for getting data out of nested maps
 
 func mapItem(obj JsonObject, item string) JsonObject {
-	return obj[item].(JsonObject)
+	if itemobj, ok := obj[item].(JsonObject); ok {
+		return itemobj
+	}
+	return nil
 }
 
 func mapItemRef(obj JsonObject, item string) *JsonObject {
