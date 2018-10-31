@@ -34,18 +34,22 @@ To experiment with the API:
 
 1. Download the code
 2. Type <code>sh gobuild.sh</code>
-3. If your kubectl is located somewhere other than /usr/local/bin, set
-the environment variable: KUBECTL_PATH to the location of your
-executable (e.g. KUBECTL_PATH=/usr/share/local/bin/kubectl)
-4. Start a proxy for the kubernetes API on port 8080 (e.g., kubectl
+3. Start a proxy for the kubernetes API on port 8080 (e.g., kubectl
    proxy --port=8080)
-5. Run ./kubeiql
+4. Run ./kubeiql
 
 The server runs at port 8128. You can use curl to play with it as
 shown in the examples below via the /query endpoint, or point your
 browser at 'localhost:8128/' and experiment with the GraphiQL tool
 (much more user-friendly).
 
+## Build an image
+If you're running on a non-linux machine, use the _elf-build.sh_
+script to build an image suitable for use in a docker container.  Then
+just build in the usual way:
+```
+docker build -t your-image-name .
+```
 ## Running inside a Kubernetes cluster
 To run kubeiql inside a cluster, simply apply the _k8sdeploy.yaml_
 file:
