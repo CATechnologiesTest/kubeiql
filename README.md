@@ -46,6 +46,13 @@ shown in the examples below via the /query endpoint, or point your
 browser at 'localhost:8128/' and experiment with the GraphiQL tool
 (much more user-friendly).
 
+## Running inside a Kubernetes cluster
+To run kubeiql inside a cluster, simply apply the _k8sdeploy.yaml_
+file:
+```
+kubectl apply -f k8sdeploy.yaml
+```
+
 ## Examples
 
 The query:

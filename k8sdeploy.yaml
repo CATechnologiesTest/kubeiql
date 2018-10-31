@@ -1,0 +1,111 @@
+# Generated 2018-10-31T22:17:29.025Z by Yipee.io
+# Application: kubeiql
+# Last Modified: 2018-10-31T22:17:29.025Z
+
+#
+# Kubernetes object definitions for deploying kubeiql in a k8s cluster
+#
+
+# ServiceAccount that will be given cluster-level access permissions
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubeiql-service-account
+
+---
+# A role allowing kubeiql to watch all system objects
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubeiql-actor
+  labels:
+    aggregate-to-admin: 'true'
+    aggregate-to-edit: 'true'
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - watch
+
+---
+# Bind the kubeiql access role to the kubeiql service account
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: kubeiql-actions
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubeiql-actor
+subjects:
+- kind: ServiceAccount
+  name: kubeiql-service-account
+  namespace: default
+
+---
+# Endpoint for accessing kubeiql.
+# This configuration works for deploying in local minikube.
+# Change type to LoadBalancer (or set up an ingress) for deployment
+# in a production environment
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubeiql
+spec:
+  selector:
+    yipee.io/kubeiql: generated
+  ports:
+  - port: 8128
+    targetPort: 8128
+    name: kubeiql-8128
+    protocol: TCP
+    nodePort: 32128
+  type: NodePort
+
+---
+# Here's the actual kubeiql app.  If you want to run a locally built
+# image (instead of the one we've pushed to dockerhub), just change
+# the image name here accordingly...
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kubeiql
+  annotations:
+    yipee.io.lastModelUpdate: '2018-10-31T22:17:28.959Z'
+    yipee.io.modelURL: http://192.168.99.100:32080/editor
+spec:
+  selector:
+    matchLabels:
+      name: kubeiql
+      component: kubeiql
+      yipee.io/kubeiql: generated
+  rollbackTo:
+    revision: 0
+  template:
+    spec:
+      imagePullSecrets: []
+      containers:
+      - name: kubeiql
+        env:
+        - name: API_HOST
+          value: https://kubernetes.default.svc
+        - name: API_SECRET_PATH
+          value: /var/run/secrets/kubernetes.io/serviceaccount
+        ports:
+        - containerPort: 8128
+          protocol: TCP
+        imagePullPolicy: Always
+        image: yipeeio/kubeiql
+      restartPolicy: Always
+      serviceAccountName: kubeiql-service-account
+    metadata:
+      labels:
+        name: kubeiql
+        component: kubeiql
+        yipee.io/kubeiql: generated
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {}
+  replicas: 1
