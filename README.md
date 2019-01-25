@@ -1,3 +1,5 @@
+# Repository Status
+**This repository exists here for historical purposes.  The active repo is now hosted at: https://github.com/yipeeio/kubeiql**
 # Kubeiql
 A GraphQL interface for Kubernetes.
 
